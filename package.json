@@ -32,7 +32,7 @@
     "grunt-eslint": "~2.0.0",
     "grunt-mocha-cli": "^1.9.0",
     "grunt-mocha-istanbul": "~2.2.0",
-    "grunt-peg": "~1.5.0",
+    "grunt-peg": "~2.0.1",
     "grunt-spider-script": "0.0.9",
     "istanbul": "~0.3.2",
     "load-grunt-tasks": "^0.4.0",
@@ -51,11 +51,11 @@
   },
   "preferGlobal": "true",
   "dependencies": {
-    "escodegen": "estools/escodegen#21a9331",
-    "pegjs": "~0.8.0",
+    "chalk": "~2.0.1",
+    "escodegen": "~1.7.1",
+    "multi-stage-sourcemap": "~0.2.1",
     "nomnom": "~1.8.1",
-    "chalk": "~0.5.1",
-    "traceur": "0.0.74",
-    "multi-stage-sourcemap": "~0.2.1"
+    "pegjs": "^0.10.0",
+    "traceur": "0.0.91"
   }
 }

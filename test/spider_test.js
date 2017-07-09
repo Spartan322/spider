@@ -45,6 +45,15 @@ describe('variable statement:', function () {
   it('create variable with number literal', 
     generateTest('var a = 5;', 'let a = 5;'));
     
+  it('create variable with hexidecimal number literal', 
+    generateTest('var a = 0xF;', 'let a = 15;'));
+    
+  it('create variable with octal number literal', 
+    generateTest('var a = 0o17;', 'let a = 15;'));
+   
+  it('create variable with binary number literal', 
+    generateTest('var a = 0b101;', 'let a = 5;'));
+    
   it('create variable with string literal', 
     generateTest('var a = "test";', 'let a = "test";'));
   
@@ -933,6 +942,11 @@ describe('function expressions:', function () {
     generateTest('var a = fn f(a, b, c) { };', 'let a = function f(a, b, c) {\n};'));        
 });
 
+/*describe('javascript literal expression:', function() {
+  it('javascript expression with normal var declaration',
+    generateTest('@js { var a; }', 'var a;'));
+});*/
+
 describe('return statement:', function () {
   it('function declaration with a return statement',
     generateTest('fn x() { return 1; }',
@@ -1690,19 +1704,19 @@ describe('curried functions:', function () {
 describe('destructuring assignment:', function () {
   it('array pattern destructuring assignment', 
     generateTest('var [m, d, y] = [3, 14, 1977];', 
-      'let [\n    m,\n    d,\n    y\n] = [\n    3,\n    14,\n    1977\n];'));
+      'let [m, d, y] = [\n    3,\n    14,\n    1977\n];'));
       
   it('array pattern destructuring assignment with 1 null', 
     generateTest('var [, d, y] = [3, 14, 1977];', 
-      'let [\n    ,\n    d,\n    y\n] = [\n    3,\n    14,\n    1977\n];'));
+      'let [, d, y] = [\n    3,\n    14,\n    1977\n];'));
       
   it('array pattern destructuring assignment with 2 nulls', 
-    generateTest('var [,, y] = [3, 14, 1977];', 
-      'let [\n    ,\n    ,\n    y\n] = [\n    3,\n    14,\n    1977\n];'));
+    generateTest('var [, , y] = [3, 14, 1977];', 
+      'let [, , y] = [\n    3,\n    14,\n    1977\n];'));
       
   it('array pattern destructuring assignment with sub array pattern', 
     generateTest('var [,, [a,b,c]] = [3, 14, [1,2,3]];', 
-      'let [\n    ,\n    ,\n    [\n        a,\n        b,\n        c\n    ]\n] = [\n    3,\n    14,\n    [\n        1,\n        2,\n        3\n    ]\n];')); 
+      'let [, , [a, b, c]] = [\n    3,\n    14,\n    [\n        1,\n        2,\n        3\n    ]\n];')); 
       
   it('object pattern destructuring assignment', 
     generateTest('var { x: x } = f;', 
@@ -1718,7 +1732,7 @@ describe('destructuring assignment:', function () {
       
   it('swap', 
     generateTest('[x,y]=[y,x];', 
-      '[\n    x,\n    y\n] = [\n    y,\n    x\n];'));           
+      '[x, y] = [\n    y,\n    x\n];'));           
 });
 
 describe('object initializer shorthand:', function () {

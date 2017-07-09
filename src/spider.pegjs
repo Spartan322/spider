@@ -1,6 +1,11 @@
 {
   var ast = module.require('./ast');
-  
+
+  /**
+  * Creates a filled array
+  * @param {number} count - The size to make the array
+  * @param {} value - The value to fill the array with
+  */
   function filledArray(count, value) {
     var result = new Array(count), i;
 
@@ -11,10 +16,20 @@
     return result;
   }
 
+  /**
+  * Extracts an optional property or returns null
+  * @param {Object|Array} optional - The object to extract the property from
+  * @param {} index - The property to extract
+  */
   function extractOptional(optional, index) {
     return optional ? optional[index] : null;
   }
 
+  /**
+  * Extracts a list of objects from a matrix-style list
+  * @param {Object|Array} list - The matrix list to extract from
+  * @param {} index = The index of the internal list
+  */
   function extractList(list, index) {
     var result = new Array(list.length), i;
 
@@ -41,47 +56,49 @@
 
   function buildBinaryExpression(first, rest) {
     return buildTree(first, rest, function(result, element) {
-      return insertLocationData(new ast.BinaryExpression(result, element[1], element[3]), text(), line(), column());
+      return insertLocationData(new ast.BinaryExpression(result, element[1], element[3]), text(), location());
     });
   }
-  
+
   function buildLogicalExpression(first, rest) {
     return buildTree(first, rest, function(result, element) {
-      return insertLocationData(new ast.LogicalExpression(result, element[1], element[3]), text(), line(), column());
+      return insertLocationData(new ast.LogicalExpression(result, element[1], element[3]), text(), location());
     });
   }
-  
+
   function buildNullCoalescingExpression(first, rest) {
     return buildTree(first, rest, function(result, element) {
-      return insertLocationData(new ast.NullCoalescingExpression(result, element[3]), text(), line(), column());
+      return insertLocationData(new ast.NullCoalescingExpression(result, element[3]), text(), location());
     });
   }
- 
+
   function optionalList(value) {
     return value !== null ? value : [];
   }
-  
-  function insertLocationData(node, text, line, column) {
+
+  function insertLocationData(node, text, location) {
     var lines = text.split("\n");
     node.loc = {
       "start": {
-        "line": line,
-        "column": column - 1
+        "line": location.start.line,
+        "column": location.start.column - 1,
+        "offset": location.start.offset
       },
       "end": {
-        "line": line + lines.length - 1,
-        "column": (lines.length === 1 ? (column - 1) : 0) + 
-          lines[lines.length - 1].length
+        "line": location.start.line + lines.length - 1,
+        "column": (lines.length === 1 ? (location.start.column - 1) : 0) +
+          lines[lines.length - 1].length,
+        "offset": location.end.offset
       }
     };
-    
+
     return node;
   }
 }
 
 Start
   = __ program:Program __ { return program; }
-  
+
 /* ----- A.1 Lexical Grammar ----- */
 
 SourceCharacter
@@ -105,6 +122,14 @@ LineTerminatorSequence "end of line"
   / "\r"
   / "\u2028"
   / "\u2029"
+  
+DecDigit = [0-9]
+NonZeroDigit = [1-9]
+HexDigit = [0-9a-f]i
+OctDigit = [0-7]
+BinDigit = [01]
+
+// Comment Definitions
 
 Comment "comment"
   = MultiLineComment
@@ -119,12 +144,14 @@ MultiLineCommentNoLineTerminator
 SingleLineComment
   = "//" (!LineTerminator SourceCharacter)*
 
+// Identifier Definitions
+
 Identifier
   = !ReservedWord name:IdentifierName { return name; }
 
 IdentifierName "identifier"
   = first:IdentifierStart rest:IdentifierPart* {
-      return insertLocationData(new ast.Identifier(first + rest.join("")), text(), line(), column());
+      return insertLocationData(new ast.Identifier(first + rest.join("")), text(), location());
     }
 
 IdentifierStart
@@ -140,30 +167,173 @@ IdentifierPart
   / UnicodeConnectorPunctuation
   / "\u200C"
   / "\u200D"
+  
+// Operator Definitions
 
-UnicodeLetter
-  = Lu
-  / Ll
-  / Lt
-  / Lm
-  / Lo
-  / Nl
+AssignmentOperator
+  = "=" !"=" { return "=" }
+  / "*="
+  / "/="
+  / "%="
+  / "+="
+  / "-="
+  / "<<="
+  / ">>="
+  / ">>>="
+  / "&="
+  / "^="
+  / "|="
+  
+LogicalOROperator
+  = "||"
+  / OrToken { return "||"; }
+  
+LogicalANDOperator
+  = "&&"
+  / AndToken { return "&&"; }
+  
+EqualityOperator
+  = "=="
+  / "!="
+  
+BitwiseOROperator
+  = $("|" ![|=])
 
-UnicodeCombiningMark
-  = Mn
-  / Mc
+BitwiseXOROperator
+  = $("^" !"=")
 
-UnicodeDigit
-  = Nd
+BitwiseANDOperator
+  = $("&" ![&=])
+  
+RelationalOperator
+  = "<="
+  / ">="
+  / $("<" !"<")
+  / $(">" !">")
+  / $InstanceofToken
 
-UnicodeConnectorPunctuation
-  = Pc
+ShiftOperator
+  = $("<<"  !"=")
+  / $(">>>" !"=")
+  / $(">>"  !"=")
+
+AdditiveOperator
+  = $("+" ![+=])
+  / $("-" ![-=])
+  
+MultiplicativeOperator
+  = $("*" ![*=])
+  / $("/" !"=")
+  / $("#" !"=")
+  / $("%" ![%=])
+  / $("%%" !"=")
+
+ExponentiativeOperator
+  = $("**" !"=")
+
+UnaryOperator
+  = $DeleteToken
+  / $TypeofToken
+  / $AsyncToken
+  / $AwaitToken
+  / $NotToken { return "!" }
+  / "<-"
+  / "++"
+  / "--"
+  / $("+" !"=")
+  / $("-" !"=")
+  / "!"
+
+PostfixOperator
+  = "++"
+  / "--"
+
+CallExpressionOperator
+  = "?"
+  / "^"
+
+FunctionExpressionOperator
+  = "->"
+  / "=>"
+
+RangeOperator
+  = ".." !"." { return ".."; }
+  / "..."
+  
+// Pattern Definitions
+
+ArrayPattern
+  = "[" __ elision:(Elision __)? "]" {
+      return insertLocationData(
+        new ast.ArrayPattern(
+          optionalList(extractOptional(elision, 0))
+        ), text(), location());
+    }
+  / "[" __ elements:PatternElementList __ "]" {
+      return insertLocationData(new ast.ArrayPattern(elements), text(), location());
+    }
+  / "[" __ elements:PatternElementList __ "," __ elision:(Elision __)? "]" {
+      return insertLocationData(
+        new ast.ArrayPattern(
+          elements.concat(optionalList(extractOptional(elision, 0)))
+        ), text(), location());
+    }
+
+PatternElementList
+  = first:(
+      elision:(Elision __)? element:PatternElement {
+        return optionalList(extractOptional(elision, 0)).concat(element);
+      }
+    )
+    rest:(
+      __ "," __ elision:(Elision __)? element:PatternElement {
+        return optionalList(extractOptional(elision, 0)).concat(element);
+      }
+    )*
+    { return Array.prototype.concat.apply(first, rest); }
+
+PatternElement
+  = Identifier
+  / ArrayPattern
+
+ObjectPattern
+  = "{" __ "}" { 
+       return  new ast.ObjectPattern([]); 
+     }
+  / "{" __ properties:PatternPropertyNameAndValueList __ "}" {
+       return insertLocationData(new ast.ObjectPattern(properties), text(), location());
+     }
+  / "{" __ properties:PatternPropertyNameAndValueList __ "," __ "}" {
+       return insertLocationData(new ast.ObjectPattern(properties), text(), location());
+     }
+     
+PatternPropertyNameAndValueList
+  = first:PatternPropertyAssignment rest:(__ "," __ PatternPropertyAssignment)* {
+      return buildList(first, rest, 3);
+    }
+
+PatternPropertyAssignment
+  = key:IdentifierName __ ":" __ value:IdentifierName {
+      return insertLocationData(new ast.Property(key, value, false, false), text(), location());
+    }
+  / key:IdentifierName __ ":" __ value:ObjectPattern {
+      return insertLocationData(new ast.Property(key, value, false, false), text(), location());
+    }
+  / key:IdentifierName {
+    return insertLocationData(new ast.Property(key, key, true, false), text(), location());
+  }    
+
+Pattern
+  = ObjectPattern
+  / ArrayPattern
+
+// Keyword Definitions
 
 ReservedWord
   = Keyword
   / NullLiteral
   / BooleanLiteral
-  
+
 Keyword
   = AndToken
   / OrToken
@@ -206,6 +376,8 @@ Keyword
   / NullToken
   / UndefinedToken
 
+// Literal Definitions
+
 Literal
   = NullLiteral
   / UndefinedLiteral
@@ -213,45 +385,47 @@ Literal
   / NumericLiteral
   / StringLiteral
   / RegularExpressionLiteral
-  
+
 NullLiteral
-  = NullToken { return insertLocationData(new ast.NullLiteral(), text(), line(), column()); }
+  = NullToken { return insertLocationData(new ast.NullLiteral(), text(), location()); }
 
 UndefinedLiteral
-  = UndefinedToken { return insertLocationData(new ast.UndefinedLiteral(), text(), line(), column()); }
-  
+  = UndefinedToken { return insertLocationData(new ast.UndefinedLiteral(), text(), location()); }
+
 BooleanLiteral
-  = TrueToken  { return insertLocationData(new ast.BooleanLiteral("true"), text(), line(), column()); }
-  / FalseToken { return insertLocationData(new ast.BooleanLiteral("false"), text(), line(), column()); }
+  = TrueToken  { return insertLocationData(new ast.BooleanLiteral("true"), text(), location()); }
+  / FalseToken { return insertLocationData(new ast.BooleanLiteral("false"), text(), location()); }
+
+// Number Definitions
 
 NumericLiteral "number"
-  = literal:HexIntegerLiteral !(IdentifierStart / DecimalDigit) {
+  = literal:HexIntegerLiteral !(IdentifierStart / DecDigit) {
       return literal;
     }
-  / literal:DecimalLiteral !(IdentifierStart / DecimalDigit) {
+  / literal:DecimalLiteral !(IdentifierStart / DecDigit) {
       return literal;
     }
-    
+  / literal:OctalIntegerLiteral !(IdentifierStart / DecDigit) {
+      return literal;
+    }
+  / literal:BinaryIntegerLiteral !(IdentifierStart / DecDigit) {
+      return literal;
+    }
+
 DecimalLiteral
-  = DecimalIntegerLiteral "." !"." DecimalDigit* ExponentPart? {
-      return insertLocationData(new ast.NumberLiteral(text()), text(), line(), column());
+  = DecimalIntegerLiteral "." !"." DecDigit* ExponentPart? {
+      return insertLocationData(new ast.NumberLiteral(text()), text(), location());
     }
-  / "." !"." DecimalDigit+ ExponentPart? {
-      return insertLocationData(new ast.NumberLiteral(text()), text(), line(), column());
+  / "." !"." DecDigit+ ExponentPart? {
+      return insertLocationData(new ast.NumberLiteral(text()), text(), location());
     }
   / DecimalIntegerLiteral ExponentPart? {
-      return insertLocationData(new ast.NumberLiteral(text()), text(), line(), column());
+      return insertLocationData(new ast.NumberLiteral(text()), text(), location());
     }
 
 DecimalIntegerLiteral
   = "0"
-  / NonZeroDigit DecimalDigit*
-
-DecimalDigit
-  = [0-9]
-
-NonZeroDigit
-  = [1-9]
+  / NonZeroDigit DecDigit*
 
 ExponentPart
   = ExponentIndicator SignedInteger
@@ -260,22 +434,31 @@ ExponentIndicator
   = "e"i
 
 SignedInteger
-  = [+-]? DecimalDigit+
+  = [+-]? DecDigit+
 
 HexIntegerLiteral
-  = "0x"i digits:$HexDigit+ { 
-    return insertLocationData(new ast.NumberLiteral(text(), 16), text(), line(), column());
+  = "0x"i digits:$HexDigit+ {
+    return insertLocationData(new ast.NumberLiteral(text(), 16), text(), location());
+  }
+  
+OctalIntegerLiteral
+  = "0o"i digits:$OctDigit+ {
+    return insertLocationData(new ast.NumberLiteral(text(), 8), text(), location());
+  }
+  
+BinaryIntegerLiteral
+  = "0b"i digits:$BinDigit+ {
+    return insertLocationData(new ast.NumberLiteral(text(), 2), text(), location());
   }
 
-HexDigit
-  = [0-9a-f]i
-  
+// String Definitions
+
 StringLiteral "string"
   = '"' chars:DoubleStringCharacter* '"' {
-      return insertLocationData(new ast.StringLiteral(chars, column()), text(), line(), column());
+      return insertLocationData(new ast.StringLiteral(chars, location().start.column), text(), location());
     }
   / "'" chars:SingleStringCharacter* "'" {
-      return insertLocationData(new ast.StringLiteral(chars, column()), text(), line(), column());
+      return insertLocationData(new ast.StringLiteral(chars, location().start.column), text(), location());
     }
 
 DoubleStringCharacter
@@ -292,11 +475,11 @@ SingleStringCharacter
 
 LineContinuation
   = "\\" LineTerminatorSequence { return ""; }
-  
+
 EscapeSequence
   = ExpressionSequence
   / CharacterEscapeSequence
-  / "0" !DecimalDigit { return "\0"; }
+  / "0" !DecDigit { return "\0"; }
   / HexEscapeSequence
   / UnicodeEscapeSequence
 
@@ -314,13 +497,13 @@ SingleEscapeCharacter
   / "r"  { return "\r";   }
   / "t"  { return "\t";   }
   / "v"  { return "\x0B"; }
-  
+
 NonEscapeCharacter
   = !(EscapeCharacter / LineTerminator) SourceCharacter { return text(); }
 
 EscapeCharacter
   = SingleEscapeCharacter
-  / DecimalDigit
+  / DecDigit
   / "x"
   / "u"
 
@@ -339,9 +522,11 @@ ExpressionSequence
       return expression;
     }
 
+// Regular Expression Definitions
+
 RegularExpressionLiteral "regular expression"
   = "/" pattern:$RegularExpressionBody "/" flags:$RegularExpressionFlags {
-      return insertLocationData(new ast.RegularExpressionLiteral(pattern, flags), text(), line(), column());
+      return insertLocationData(new ast.RegularExpressionLiteral(pattern, flags), text(), location());
     }
 
 RegularExpressionBody
@@ -372,6 +557,894 @@ RegularExpressionClassChar
 
 RegularExpressionFlags
   = IdentifierPart*
+
+// Array Definitions
+
+ArrayLiteral
+  = "[" __ elision:(Elision __)? "]" {
+      return insertLocationData(new ast.ArrayExpression(optionalList(extractOptional(elision, 0))), text(), location());
+    }
+  / "[" __ elements:ElementList __ "]" {
+      return insertLocationData(new ast.ArrayExpression(elements), text(), location());
+    }
+  / "[" __ elements:ElementList __ "," __ elision:(Elision __)? "]" {
+      return insertLocationData(new ast.ArrayExpression(elements.concat(optionalList(extractOptional(elision, 0)))), text(), location());
+    }
+
+ElementList
+  = first:(
+      elision:(Elision __)? element:AssignmentExpression {
+        return optionalList(extractOptional(elision, 0)).concat(element);
+      }
+    )
+    rest:(
+      __ "," __ elision:(Elision __)? element:AssignmentExpression {
+        return optionalList(extractOptional(elision, 0)).concat(element);
+      }
+    )*
+    { return Array.prototype.concat.apply(first, rest); }
+    
+// Object Definitions
+
+ObjectLiteral
+  = "{" __ "}" { 
+       return  new ast.ObjectExpression([]); 
+     }
+  / "{" __ properties:PropertyNameAndValueList __ "}" {
+       return insertLocationData(new ast.ObjectExpression(properties), text(), location());
+     }
+  / "{" __ properties:PropertyNameAndValueList __ "," __ "}" {
+       return insertLocationData(new ast.ObjectExpression(properties), text(), location());
+     }
+     
+PropertyNameAndValueList
+  = first:PropertyAssignment rest:(__ "," __ PropertyAssignment)* {
+      return buildList(first, rest, 3);
+    }
+
+PropertyAssignment
+  = key:PropertyName __ ":" __ value:AssignmentExpression {
+      return insertLocationData(new ast.Property(key, value, false, false), text(), location());
+    }
+  / key:PropertyName __ 
+    "(" __ params:(FormalParameterList __)? ")"
+    __ body:Block __
+    {
+      return insertLocationData(new ast.Property(key, new ast.FunctionExpression(
+        null, 
+        optionalList(extractOptional(params, 0)),
+        body,
+        null
+      ), false, true), text(), location());
+    }    
+  / key:IdentifierName {
+    return insertLocationData(new ast.Property(key, key, true, false), text(), location());
+  }
+
+PropertyName
+  = IdentifierName
+  / StringLiteral
+  / NumericLiteral
+
+// Token Definitions
+
+AndToken          = "and"         !IdentifierPart
+OrToken           = "or"          !IdentifierPart
+ReturnToken       = "return"      !IdentifierPart
+FnToken           = "fn"          !IdentifierPart
+VarToken          = "var"         !IdentifierPart
+IfToken           = "if"          !IdentifierPart
+ElseToken         = "else"        !IdentifierPart
+ForToken          = "for"         !IdentifierPart
+TrueToken         = "true"        !IdentifierPart
+FalseToken        = "false"       !IdentifierPart
+NullToken         = "null"        !IdentifierPart
+NewToken          = "new"         !IdentifierPart
+UseToken          = "use"         !IdentifierPart
+ThisToken         = "this"        !IdentifierPart
+SuperToken        = "super"       !IdentifierPart
+ThrowToken        = "throw"       !IdentifierPart
+BreakToken        = "break"       !IdentifierPart
+ContinueToken     = "continue"    !IdentifierPart
+DebuggerToken     = "debugger"    !IdentifierPart
+WhileToken        = "while"       !IdentifierPart
+UntilToken        = "until"       !IdentifierPart
+TypeofToken       = "typeof"      !IdentifierPart
+InToken           = "in"          !IdentifierPart
+OfToken           = "of"          !IdentifierPart
+TryToken          = "try"         !IdentifierPart
+FinallyToken      = "finally"     !IdentifierPart
+CatchToken        = "catch"       !IdentifierPart
+InstanceofToken   = "instanceof"  !IdentifierPart
+SwitchToken       = "switch"      !IdentifierPart
+CaseToken         = "case"        !IdentifierPart
+DefaultToken      = "default"     !IdentifierPart
+FallthroughToken  = "fallthrough" !IdentifierPart
+NotToken          = "not"         !IdentifierPart
+ImportToken       = "import"      !IdentifierPart
+FromToken         = "from"        !IdentifierPart
+AsToken           = "as"          !IdentifierPart
+ExportToken       = "export"      !IdentifierPart
+DeleteToken       = "delete"      !IdentifierPart
+DoToken           = "do"          !IdentifierPart
+AsyncToken        = "async"       !IdentifierPart
+AwaitToken        = "await"       !IdentifierPart
+GoToken           = "go"          !IdentifierPart
+UndefinedToken    = "undefined"   !IdentifierPart
+
+// Helper Defintions
+__
+  = (WhiteSpace / LineTerminatorSequence / Comment)*
+
+_
+  = (WhiteSpace / MultiLineCommentNoLineTerminator)*
+
+EOS
+  = __ ";"
+
+EOF
+  = !.
+
+Program
+  = body:StatementList? {
+      return insertLocationData(new ast.Program(optionalList(body)), text(), location());
+    }
+    
+Block
+  = "{" __ body:(StatementList __)? "}" {
+      return insertLocationData(new ast.BlockStatement(optionalList(extractOptional(body, 0))), text(), location());
+    }
+    
+InheritsFrom
+  = "extends" __ call:CallExpression __ {
+      return call;
+    }
+
+FormalParameterList
+  = first:FormalParameter rest:(__ "," __ FormalParameter)* {
+      return buildList(first, rest, 3);
+    }
+
+FormalParameter
+  = id:Identifier __ "=" __ defaultValue:Expression {
+    return insertLocationData(new ast.Parameter(id, defaultValue, false), text(), location());
+  }
+  / id:Identifier __ "..." {
+    return insertLocationData(new ast.Parameter(id, null, true), text(), location());
+  }
+  / id:Identifier {
+    return insertLocationData(new ast.Parameter(id, null, false), text(), location());
+  }
+
+// Statement Definitions
+
+StatementList
+  = first:Statement rest:(__ Statement)* {
+      return buildList(first, rest, 1);
+    }
+
+Statement
+  = Block
+  / VariableStatement
+  / FunctionDeclaration
+  / IfStatement
+  / PushStatement
+  / ExpressionStatement
+  / ReturnStatement
+  / ForStatement
+  / UseStatement
+  / ThrowStatement
+  / TryStatement
+  / BreakStatement
+  / ContinueStatement
+  / DebuggerStatement
+  / WhileStatement
+  / UntilStatement
+  / SwitchStatement
+  / FallthroughStatement
+  / ImportDeclarationStatement
+  / ExportDeclarationStatement
+  / DoWhileStatement
+  / GoStatement
+
+
+VariableStatement
+  = VarToken __ declarations:VariableDeclarationList EOS {
+      return insertLocationData(new ast.VariableDeclarationStatement(declarations), text(), location());
+    }
+
+VariableDeclarationList
+  = first:VariableDeclaration rest:(__ "," __ VariableDeclaration)* {
+      return buildList(first, rest, 3);
+    }
+
+VariableDeclaration
+  = id:Identifier init:(__ Initialiser)? {
+      return insertLocationData(new ast.VariableDeclarator(id, extractOptional(init, 1)), text(), location());
+    }
+  / id:Pattern init:(__ Initialiser)? {
+    return insertLocationData(new ast.VariableDeclarator(id, extractOptional(init, 1)), text(), location());
+  }
+
+Initialiser
+  = "=" !"=" __ expression:AssignmentExpression { return expression; }
+
+FunctionDeclaration
+  = AsyncToken __ FnToken __ id:Identifier __
+    "(" __ params:(FormalParameterList __)? ")" __
+    inheritsFrom:InheritsFrom?
+    __ body:Block __
+    {
+      return insertLocationData(
+          new ast.VariableDeclarationStatement(
+            [new ast.VariableDeclarator(id,
+              new ast.UnaryExpression("async",
+                new ast.FunctionExpression(
+                  null,
+                  optionalList(extractOptional(params, 0)),
+                  body,
+                  inheritsFrom
+                )
+              )
+            )]
+          ),
+        text(), location());
+    }
+  / FnToken __ id:Identifier __
+    "(" __ params:(FormalParameterList __)? ")" __
+    inheritsFrom:InheritsFrom?
+    __ body:Block __
+    {
+      return insertLocationData(
+          new ast.FunctionDeclarationStatement(id, optionalList(extractOptional(params, 0)), body, inheritsFrom),
+        text(), location());
+    }
+
+IfStatement
+  = IfToken __ test:Expression __
+    consequent:Statement __
+    ElseToken __
+    alternate:Statement
+    {
+      return insertLocationData(new ast.IfStatement(test, consequent, alternate), text(), location());
+    }
+  / IfToken __ test:Expression __
+    consequent:Statement {
+      return insertLocationData(new ast.IfStatement(test, consequent, null), text(), location());
+    }
+
+ReturnStatement
+  = ReturnToken EOS {
+      return insertLocationData(new ast.ReturnStatement(null), text(), location());
+    }
+  / ReturnToken _ argument:Expression EOS {
+      return insertLocationData(new ast.ReturnStatement(argument), text(), location());
+    }
+
+ThrowStatement
+  = ThrowToken _ argument:Expression EOS {
+      return insertLocationData(new ast.ThrowStatement(argument), text(), location());
+    }
+
+TryStatement
+  = TryToken __ block:Block __ handler:Catch __ finalizer:Finally {
+      return insertLocationData(new ast.TryStatement(block, handler, finalizer), text(), location());
+    }
+  / TryToken __ block:Block __ handler:Catch {
+      return insertLocationData(new ast.TryStatement(block, handler, null), text(), location());
+    }
+  / TryToken __ block:Block __ finalizer:Finally {
+      return insertLocationData(new ast.TryStatement(block, null, finalizer), text(), location());
+    }
+
+Catch
+  = CatchToken __ param:Identifier __ body:Block {
+      return insertLocationData(new ast.CatchClause(param, body), text(), location());
+    }
+
+Finally
+  = FinallyToken __ block:Block { return block; }
+
+BreakStatement
+  = BreakToken EOS {
+      return insertLocationData(new ast.BreakStatement(), text(), location());
+    }
+
+ContinueStatement
+  = ContinueToken EOS {
+      return insertLocationData(new ast.ContinueStatement(), text(), location());
+    }
+
+FallthroughStatement
+  = FallthroughToken EOS {
+      return insertLocationData(new ast.FallthroughStatement(), text(), location());
+    }
+
+ImportDeclarationStatement
+  = ImportToken __ specifiers:ImportSpecifierList __ FromToken __ source:StringLiteral EOS {
+    return insertLocationData(new ast.ImportDeclarationStatement(specifiers, source, "named"), text(), location());
+  }
+  / ImportToken __ "*" __ AsToken __ id:Identifier __ FromToken __ source:StringLiteral EOS {
+    return insertLocationData(new ast.ImportDeclarationStatement([
+      new ast.ImportNamespaceSpecifier(id)
+    ], source, "named"), text(), location());
+  }
+  / ImportToken __ source:StringLiteral __ AsToken __ id:Identifier EOS {
+    return insertLocationData(new ast.ImportDeclarationStatement([
+      new ast.ImportDefaultSpecifier(id)
+    ], source, "default"), text(), location());
+  }
+
+ImportSpecifierList
+  = first:ImportSpecifier rest:("," __ ImportSpecifier)* {
+      return buildList(first, rest, 2);
+    }
+
+ImportSpecifier
+  = id:Identifier __ AsToken __ alias:Identifier {
+    return insertLocationData(new ast.ImportSpecifier(id, alias), text(), location());
+  }
+  / id:Identifier {
+    return insertLocationData(new ast.ImportSpecifier(id, null), text(), location());
+  }
+
+ExportDeclarationStatement
+  = ExportToken __ specifiers:ExportSpecifierList source:(__ FromToken __ StringLiteral)? EOS {
+    return insertLocationData(new ast.ExportDeclarationStatement(specifiers, extractOptional(source, 3), null, false), text(), location());
+  }
+  / ExportToken __ "*" __ FromToken __ source:StringLiteral EOS {
+    return insertLocationData(new ast.ExportDeclarationStatement([
+      new ast.ExportBatchSpecifier()
+    ], source, null, false), text(), location());
+  }
+  / ExportToken __ statement:VariableStatement {
+    return insertLocationData(new ast.ExportDeclarationStatement(null, null, statement, false), text(), location());
+  }
+  / ExportToken __ statement:FunctionDeclaration {
+    return insertLocationData(new ast.ExportDeclarationStatement(null, null, statement, false), text(), location());
+  }
+  / ExportToken __ DefaultToken __ expression:Expression EOS {
+    return insertLocationData(new ast.ExportDeclarationStatement(null, null, expression, true), text(), location());
+  }
+
+ExportSpecifierList
+  = first:ExportSpecifier rest:("," __ ExportSpecifier)* {
+      return buildList(first, rest, 2);
+    }
+
+ExportSpecifier
+  = id:Identifier __ AsToken __ alias:Identifier {
+    return insertLocationData(new ast.ExportSpecifier(id, alias), text(), location());
+  }
+  / id:Identifier {
+    return insertLocationData(new ast.ExportSpecifier(id, null), text(), location());
+  }
+
+DoWhileStatement
+  = DoToken __
+    body:Statement __
+    WhileToken __ test:Expression EOS {
+      return insertLocationData(new ast.DoWhileStatement(test, body), text(), location());
+    }
+
+PushStatement
+  = left:LeftHandSideExpression __ "<-" __ right:AssignmentExpression EOS {
+      return insertLocationData(new ast.PushStatement(left, right), text(), location());
+  }
+
+GoStatement
+  = GoToken __ body:Block EOS {
+    return insertLocationData(new ast.GoStatement(body), text(), location());
+  }
+
+DebuggerStatement
+  = DebuggerToken EOS {
+      return insertLocationData(new ast.DebuggerStatement(), text(), location());
+    }
+
+WhileStatement
+  = WhileToken __ test:Expression __
+    body:Statement {
+      return insertLocationData(new ast.WhileStatement(test, body), text(), location());
+    }
+
+UntilStatement
+  = UntilToken __ test:Expression __
+    body:Statement {
+      return insertLocationData(new ast.UntilStatement(test, body), text(), location());
+    }
+
+SwitchStatement
+  = SwitchToken __ discriminant:Expression __ "{" __
+    cases:CaseClauseList __
+    "}" {
+      return insertLocationData(new ast.SwitchStatement(discriminant, cases), text(), location());
+    }
+
+CaseClauseList
+  = first:CaseClause rest:(__ ","? __ CaseClause)* {
+      return buildList(first, rest, 3);
+    }
+
+CaseClause
+  = CaseToken __ tests:CaseClauseTestList __ ":" __ body:Statement {
+      return insertLocationData(new ast.CaseClause(tests, body), text(), location());
+    }
+  / DefaultToken __ ":" __ body:Statement {
+      return insertLocationData(new ast.CaseClause(null, body), text(), location());
+    }
+
+CaseClauseTestList
+  = first:CaseClauseTest rest:("," __ CaseClauseTest)* {
+      return buildList(first, rest, 2);
+    }
+
+CaseClauseTest
+  = OptionalRange
+  / Expression
+
+ForStatement
+  = ForToken __
+    item:Identifier __
+    index:("," __ Identifier)? __
+    InToken __ array:Expression __
+    body:Statement {
+      return insertLocationData(new ast.ForInStatement(
+        item,
+        extractOptional(index, 2),
+        array,
+        body
+      ), text(), location());
+    }
+  / ForToken __
+    key:Identifier __
+    value:("," __ Identifier)? __
+    OfToken __ object:Expression __
+    body:Statement {
+      return insertLocationData(new ast.ForOfStatement(
+        key,
+        extractOptional(value, 2),
+        object,
+        body
+      ), text(), location());
+    }
+  / ForToken __
+    VarToken __ declarations:VariableDeclarationList __ ";" __
+    test:(Expression __)? ";" __
+    update:(!("{" __ "}") Expression __)?  __
+    body:Statement {
+      return insertLocationData(new ast.ForStatement(
+        new ast.VariableDeclarationStatement(declarations),
+        extractOptional(test, 0),
+        extractOptional(update, 1),
+        body
+      ), text(), location());
+    }
+  / ForToken __
+    init:(Expression __)? ";" __
+    test:(Expression __)? ";" __
+    update:(!("{" __ "}") Expression __)?  __
+    body:Statement {
+      return insertLocationData(new ast.ForStatement(
+        extractOptional(init, 0),
+        extractOptional(test, 0),
+        extractOptional(update, 1),
+        body
+      ), text(), location());
+    }
+
+UseStatement
+  = UseToken __ identifiers:UseIdentifierList EOS
+    { return new ast.UseStatement(identifiers) }
+
+UseIdentifierList
+  = first:UseIdentifier rest:(__ "," __ UseIdentifier)* {
+      return buildList(first, rest, 3);
+    }
+
+UseIdentifier
+  = Identifier
+  / ":" id:Identifier {
+    return id.asPredefinedCollection();
+  }
+  
+// Expression Definitions
+
+ExpressionStatement
+  = !("{" / FnToken) expression:Expression EOS {
+      return insertLocationData(new ast.ExpressionStatement(expression), text(), location());
+    }
+
+AssignmentExpression
+  = left:Pattern __ "=" !"=" __ right:AssignmentExpression {
+      return insertLocationData(new ast.AssignmentExpression(
+        left, "=", right), text(), location());
+  }
+  / left:ConditionalExpression
+    assignment:(__ operator:AssignmentOperator __
+    right:AssignmentExpression)? {
+      if (!assignment) {
+        return left;
+      }
+
+      return insertLocationData(new ast.AssignmentExpression(
+        left,
+        extractOptional(assignment, 1),
+        extractOptional(assignment, 3)), text(), location());
+    }
+
+ConditionalExpression
+  = consequent:LogicalORExpression __
+    condition:(IfToken __ LogicalORExpression __
+    ElseToken __ LogicalORExpression)? {
+      if (condition) {
+        var test = extractOptional(condition, 2);
+        var alternate = extractOptional(condition, 6);
+
+        return insertLocationData(new ast.ConditionalExpression(test, consequent, alternate), text(), location());
+      } else {
+        return consequent;
+      }
+    }
+
+LogicalORExpression
+  = first:LogicalANDExpression
+    rest:(__ LogicalOROperator __ LogicalANDExpression)*
+    { return buildLogicalExpression(first, rest); }
+
+LogicalANDExpression
+  = first:BitwiseORExpression
+    rest:(__ LogicalANDOperator __ BitwiseORExpression)*
+    { return buildLogicalExpression(first, rest); }
+
+BitwiseORExpression
+  = first:BitwiseXORExpression
+    rest:(__ BitwiseOROperator __ BitwiseXORExpression)*
+    { return buildBinaryExpression(first, rest); }
+
+BitwiseXORExpression
+  = first:BitwiseANDExpression
+    rest:(__ BitwiseXOROperator __ BitwiseANDExpression)*
+    { return buildBinaryExpression(first, rest); }
+
+BitwiseANDExpression
+  = first:EqualityExpression
+    rest:(__ BitwiseANDOperator __ EqualityExpression)*
+    { return buildBinaryExpression(first, rest); }
+
+EqualityExpression
+  = first:RelationalExpression
+    rest:(__ EqualityOperator __ RelationalExpression)*
+    { return buildBinaryExpression(first, rest); }
+
+RelationalExpression
+  = first:InExpression
+    rest:(__ RelationalOperator __ InExpression)*
+    { return buildBinaryExpression(first, rest); }
+
+InExpression
+  = left:NullCoalescingExpression
+    right:(__ InToken __ NullCoalescingExpression)? {
+      if (!right) {
+        return left;
+      }
+      return insertLocationData(new ast.InExpression(left, extractOptional(right, 3)), text(), location());
+    }
+
+NullCoalescingExpression
+  = first:ShiftExpression
+    rest:(__ "??" __ ShiftExpression)*
+    { return buildNullCoalescingExpression(first, rest); }
+
+ShiftExpression
+  = first:AdditiveExpression
+    rest:(__ ShiftOperator __ AdditiveExpression)*
+    { return buildBinaryExpression(first, rest); }
+
+AdditiveExpression
+  = first:MultiplicativeExpression
+    rest:(__ AdditiveOperator __ MultiplicativeExpression)*
+    { return buildBinaryExpression(first, rest); }
+
+MultiplicativeExpression
+  = first:ExponentiativeExpression
+    rest:(__ MultiplicativeOperator __ UnaryExpression)*
+    { return buildBinaryExpression(first, rest); }
+
+ExponentiativeExpression
+  = first:UnaryExpression
+    rest:(__ ExponentiativeOperator __ UnaryExpression)*
+    { return buildBinaryExpression(first, rest); }
+
+UnaryExpression
+  = operator:UnaryOperator __ argument:PostfixExpression {
+      if (operator === "++" || operator === "--") {
+        return insertLocationData(new ast.UpdateExpression(argument, operator, true), text(), location());
+      } else {
+        return insertLocationData(new ast.UnaryExpression(operator, argument), text(), location());
+      }
+    }
+  / PostfixExpression
+
+PostfixExpression
+  = argument:ExistentialExpression _ operator:PostfixOperator? {
+      if (operator) {
+        return insertLocationData(new ast.UpdateExpression(argument, operator, false), text(), location());
+      } else {
+        return argument;
+      }
+    }
+
+ExistentialExpression
+  = argument:LeftHandSideExpression operator:"?"? !"?" {
+    if (operator) {
+      return insertLocationData(new ast.ExistentialExpression(argument), text(), location());
+    } else {
+      return argument;
+    }
+  }
+
+LeftHandSideExpression
+  = CallExpression
+
+CallExpression
+  = first:(
+      callee:MemberExpression call:(__ CallExpressionOperator? __ args:Arguments)? {
+        if (!call) {
+          return callee;
+        }
+
+        var op = extractOptional(call, 1);
+        if (op === "?") {
+          return insertLocationData(new ast.NullCheckCallExpression(callee, extractOptional(call, 3)), text(), location());
+        } else if (op === "^") {
+          return insertLocationData(new ast.CurryCallExpression(callee, extractOptional(call, 3)), text(), location());
+        } else {
+          return insertLocationData(new ast.CallExpression(callee, extractOptional(call, 3)), text(), location());
+        }
+      }
+    )
+    rest:(
+        __ operator:CallExpressionOperator? __ args:Arguments {
+          var type = "CallExpression";
+          if (operator === "?") {
+            type = "NullCheckCallExpression";
+          } else if (operator === "^") {
+            type = "CurryCallExpression";
+          }
+
+          return {
+            type: type,
+            arguments: args
+          };
+        }
+      / __ "[" __ property:Expression __ "]" {
+          return {
+            type:     "MemberExpression",
+            property: property,
+            computed: true
+          };
+        }
+      / __ "[" __ range:OptionalRange __ "]" {
+        return {
+          type: "RangeMemberExpression",
+          range: range
+        }
+      }
+      / __ nullPropagatingOperator:"?"? __ "." !"." __ property:IdentifierName {
+          return {
+            type:     nullPropagatingOperator === "?" ? "NullPropagatingExpression" : "MemberExpression",
+            property: property,
+            computed: false
+          };
+        }
+    )*
+    {
+      return buildTree(first, rest, function(result, element) {
+        if (element.type === "MemberExpression") {
+          return insertLocationData(new ast.MemberExpression(result, element.property, element.computed), text(), location());
+        } if (element.type === "NullPropagatingExpression") {
+          return insertLocationData(new ast.NullPropagatingExpression(result, element.property, element.computed), text(), location());
+        } else if (element.type === "CallExpression") {
+          return insertLocationData(new ast.CallExpression(result, element.arguments), text(), location());
+        } else if (element.type === "CurryCallExpression") {
+          return insertLocationData(new ast.CurryCallExpression(result, element.arguments), text(), location());
+        } else if (element.type === "NullCheckCallExpression") {
+          return insertLocationData(new ast.NullCheckCallExpression(result, element.arguments), text(), location());
+        } else if (element.type === "RangeMemberExpression") {
+          return insertLocationData(new ast.RangeMemberExpression(result, element.range), text(), location());
+        }
+      });
+    }
+
+MemberExpression
+  = first:(
+        FunctionExpression
+      / NewToken __ callee:MemberExpression __ args:Arguments {
+          return insertLocationData(new ast.NewExpression(callee, args), text(), location());
+        }
+    )
+    rest:(
+        __ "[" __ property:Expression __ "]" {
+          return {
+            type: "MemberExpression",
+            property: property,
+            computed: true
+          };
+        }
+      / __ nullPropagatingOperator:"?"? __ "." !"." __ property:IdentifierName {
+          return {
+            type: nullPropagatingOperator === "?" ? "NullPropagatingExpression" : "MemberExpression",
+            property: property,
+            computed: false
+          };
+        }
+      / __ "[" __ range:OptionalRange __ "]" {
+        return {
+          type: "RangeMemberExpression",
+          range: range
+        }
+      }
+    )*
+    {
+      return buildTree(first, rest, function (result, element) {
+        if (element.type === "NullPropagatingExpression") {
+          return insertLocationData(new ast.NullPropagatingExpression(result, element.property, element.computed), text(), location());
+        } else if (element.type === "MemberExpression") {
+          return insertLocationData(new ast.MemberExpression(result, element.property, element.computed), text(), location());
+        } else if (element.type === "RangeMemberExpression") {
+          return insertLocationData(new ast.RangeMemberExpression(result, element.range), text(), location());
+        }
+      });
+    }
+
+Arguments
+  = "(" __ args:(ArgumentList __)? ")" {
+      return optionalList(extractOptional(args, 0));
+    }
+
+ArgumentList
+  = first:Argument rest:(__ "," __ Argument)* {
+      return buildList(first, rest, 3);
+    }
+
+Argument
+  = expression:AssignmentExpression __ "..." {
+    return insertLocationData(new ast.SplatExpression(expression), text(), location());
+  }
+  / AssignmentExpression
+
+FunctionExpression
+  = FnToken __ id:(Identifier __)?
+    "(" __ params:(FormalParameterList __)? ")" __
+    inheritsFrom:InheritsFrom?
+    __ body:Block __
+    {
+      return insertLocationData(new ast.FunctionExpression(
+        extractOptional(id, 0),
+        optionalList(extractOptional(params, 0)),
+        body,
+        inheritsFrom
+      ), text(), location());
+    }
+  / "(" __ params:(FormalParameterList __)? ")"
+    __ operator:FunctionExpressionOperator
+    __ body:Block __
+    {
+      return insertLocationData(new ast.FunctionExpression(
+        null,
+        optionalList(extractOptional(params, 0)),
+        body,
+        null,
+        operator
+      ), text(), location());
+    }
+  / "(" __ params:(FormalParameterList __)? ")"
+    __ operator:FunctionExpressionOperator
+    __ body:Expression __
+    {
+      return insertLocationData(new ast.FunctionExpression(
+        null,
+        optionalList(extractOptional(params, 0)),
+        body,
+        null,
+        operator
+      ), text(), location());
+    }
+  / ForInExpression
+
+ForInExpression
+  = "[" __
+    expression:Expression __
+    ForToken __
+    item:Identifier __
+    index:("," __ Identifier __)?
+    InToken __
+    array:Expression __
+    condition:(IfToken __ Expression __)?
+    "]" {
+      return insertLocationData(new ast.ForInExpression(
+        expression,
+        item,
+        index ? extractOptional(index, 2) : null,
+        array,
+        condition ? extractOptional(condition, 2) : null
+      ), text(), location());
+    }
+  / GlobalIdentifierExpression
+
+GlobalIdentifierExpression
+  = "::" __ id:Identifier
+    { return id.asGlobal(); }
+  / PrimaryExpression
+
+PrimaryExpression
+  = ThisExpression
+  / SuperExpression
+  / RangeExpression
+  / Identifier
+  / Literal
+  / ArrayLiteral
+  / ObjectLiteral
+  / "(" __ expression:Expression __ ")" { return expression; }
+
+ThisExpression
+  = ThisToken {
+      return insertLocationData(new ast.ThisExpression(), text(), location());
+    }
+
+SuperExpression
+  = SuperToken {
+      return insertLocationData(new ast.SuperExpression(), text(), location());
+    }
+
+RangeExpression
+  = "[" __ range:Range __ "]" {
+    return range;
+  }
+
+Range
+  = from:Expression __ operator:RangeOperator __ to:Expression {
+    return insertLocationData(new ast.Range(from, operator, to), text(), location());
+  }
+
+OptionalRange
+  = from:Expression? __ operator:RangeOperator __ to:Expression? {
+    return insertLocationData(new ast.Range(from, operator, to), text(), location());
+  }
+  
+/*JavascriptLiteralExpression
+  = "@js" __ "{" __? jsLiteral:(SourceCharacter __)* "}" {
+    return insertLocationData(new ast.JavascriptLiteralExpression(jsLiteral), text(), location());
+  } */
+
+Expression
+  = expression:AssignmentExpression {
+      return expression;
+    }
+
+Elision
+  = "," commas:(__ ",")* { return filledArray(commas.length + 1, null); }
+
+// Unicode Definitions
+
+UnicodeLetter
+  = Lu
+  / Ll
+  / Lt
+  / Lm
+  / Lo
+  / Nl
+
+UnicodeCombiningMark
+  = Mn
+  / Mc
+
+UnicodeDigit
+  = Nd
+
+UnicodeConnectorPunctuation
+  = Pc
 
 /*
  * Unicode Character Categories
@@ -430,1005 +1503,3 @@ Pc = [\u005F\u203F-\u2040\u2054\uFE33-\uFE34\uFE4D-\uFE4F\uFF3F]
 
 // Separator, Space
 Zs = [\u0020\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]
-
-/* Tokens */
-
-AndToken          = "and"         !IdentifierPart
-OrToken           = "or"          !IdentifierPart
-ReturnToken       = "return"      !IdentifierPart
-FnToken           = "fn"          !IdentifierPart
-VarToken          = "var"         !IdentifierPart
-IfToken           = "if"          !IdentifierPart
-ElseToken         = "else"        !IdentifierPart
-ForToken          = "for"         !IdentifierPart
-TrueToken         = "true"        !IdentifierPart
-FalseToken        = "false"       !IdentifierPart
-NullToken         = "null"        !IdentifierPart
-NewToken          = "new"         !IdentifierPart
-UseToken          = "use"         !IdentifierPart
-ThisToken         = "this"        !IdentifierPart
-SuperToken        = "super"       !IdentifierPart
-ThrowToken        = "throw"       !IdentifierPart
-BreakToken        = "break"       !IdentifierPart
-ContinueToken     = "continue"    !IdentifierPart
-DebuggerToken     = "debugger"    !IdentifierPart
-WhileToken        = "while"       !IdentifierPart
-UntilToken        = "until"       !IdentifierPart
-TypeofToken       = "typeof"      !IdentifierPart
-InToken           = "in"          !IdentifierPart
-OfToken           = "of"          !IdentifierPart
-TryToken          = "try"         !IdentifierPart
-FinallyToken      = "finally"     !IdentifierPart
-CatchToken        = "catch"       !IdentifierPart
-InstanceofToken   = "instanceof"  !IdentifierPart
-SwitchToken       = "switch"      !IdentifierPart
-CaseToken         = "case"        !IdentifierPart
-DefaultToken      = "default"     !IdentifierPart
-FallthroughToken  = "fallthrough" !IdentifierPart
-NotToken          = "not"         !IdentifierPart
-ImportToken       = "import"      !IdentifierPart
-FromToken         = "from"        !IdentifierPart
-AsToken           = "as"          !IdentifierPart
-ExportToken       = "export"      !IdentifierPart
-DeleteToken       = "delete"      !IdentifierPart
-DoToken           = "do"          !IdentifierPart
-AsyncToken        = "async"       !IdentifierPart
-AwaitToken        = "await"       !IdentifierPart
-GoToken           = "go"          !IdentifierPart
-UndefinedToken    = "undefined"   !IdentifierPart
-
-__
-  = (WhiteSpace / LineTerminatorSequence / Comment)*
-
-_
-  = (WhiteSpace / MultiLineCommentNoLineTerminator)*
-  
-EOS
-  = __ ";"
-
-EOF
-  = !.
-
-Program
-  = body:StatementList? {
-      return insertLocationData(new ast.Program(optionalList(body)), text(), line(), column());
-    }
-   
-StatementList
-  = first:Statement rest:(__ Statement)* {
-      return buildList(first, rest, 1);
-    }
-
-Statement
-  = Block
-  / VariableStatement
-  / FunctionDeclaration
-  / IfStatement
-  / PushStatement  
-  / ExpressionStatement
-  / ReturnStatement
-  / ForStatement
-  / UseStatement
-  / ThrowStatement
-  / TryStatement
-  / BreakStatement
-  / ContinueStatement
-  / DebuggerStatement
-  / WhileStatement
-  / UntilStatement
-  / SwitchStatement
-  / FallthroughStatement
-  / ImportDeclarationStatement
-  / ExportDeclarationStatement
-  / DoWhileStatement
-  / GoStatement
-
-Block
-  = "{" __ body:(StatementList __)? "}" {
-      return insertLocationData(new ast.BlockStatement(optionalList(extractOptional(body, 0))), text(), line(), column());
-    }
-    
-VariableStatement
-  = VarToken __ declarations:VariableDeclarationList EOS {
-      return insertLocationData(new ast.VariableDeclarationStatement(declarations), text(), line(), column());
-    }
-    
-VariableDeclarationList
-  = first:VariableDeclaration rest:(__ "," __ VariableDeclaration)* {
-      return buildList(first, rest, 3);
-    }
-    
-VariableDeclaration
-  = id:Identifier init:(__ Initialiser)? {
-      return insertLocationData(new ast.VariableDeclarator(id, extractOptional(init, 1)), text(), line(), column());
-    }
-  / id:Pattern init:(__ Initialiser)? {
-    return insertLocationData(new ast.VariableDeclarator(id, extractOptional(init, 1)), text(), line(), column());
-  }
-
-Initialiser
-  = "=" !"=" __ expression:AssignmentExpression { return expression; }
-  
-FunctionDeclaration
-  = AsyncToken __ FnToken __ id:Identifier __
-    "(" __ params:(FormalParameterList __)? ")" __
-    inheritsFrom:InheritsFrom?
-    __ body:Block __ 
-    {
-      return insertLocationData(
-          new ast.VariableDeclarationStatement(
-            [new ast.VariableDeclarator(id, 
-              new ast.UnaryExpression("async", 
-                new ast.FunctionExpression(
-                  null, 
-                  optionalList(extractOptional(params, 0)),
-                  body,
-                  inheritsFrom
-                )
-              )
-            )]
-          ), 
-        text(), line(), column());
-    }
-  / FnToken __ id:Identifier __
-    "(" __ params:(FormalParameterList __)? ")" __
-    inheritsFrom:InheritsFrom?
-    __ body:Block __ 
-    {
-      return insertLocationData(
-          new ast.FunctionDeclarationStatement(id, optionalList(extractOptional(params, 0)), body, inheritsFrom), 
-        text(), line(), column());
-    }
-
-InheritsFrom
-  = "extends" __ call:CallExpression __ {
-      return call;
-    }
-    
-FormalParameterList
-  = first:FormalParameter rest:(__ "," __ FormalParameter)* {
-      return buildList(first, rest, 3);
-    }
-    
-FormalParameter
-  = id:Identifier __ "=" __ defaultValue:Expression {
-    return insertLocationData(new ast.Parameter(id, defaultValue, false), text(), line(), column());
-  }
-  / id:Identifier __ "..." {
-    return insertLocationData(new ast.Parameter(id, null, true), text(), line(), column());
-  }
-  / id:Identifier {
-    return insertLocationData(new ast.Parameter(id, null, false), text(), line(), column());
-  }
-  
-IfStatement
-  = IfToken __ test:Expression __
-    consequent:Statement __
-    ElseToken __
-    alternate:Statement
-    {
-      return insertLocationData(new ast.IfStatement(test, consequent, alternate), text(), line(), column());
-    }
-  / IfToken __ test:Expression __
-    consequent:Statement {
-      return insertLocationData(new ast.IfStatement(test, consequent, null), text(), line(), column());
-    }
-    
-ReturnStatement
-  = ReturnToken EOS {
-      return insertLocationData(new ast.ReturnStatement(null), text(), line(), column());
-    }
-  / ReturnToken _ argument:Expression EOS {
-      return insertLocationData(new ast.ReturnStatement(argument), text(), line(), column());
-    }
-    
-ThrowStatement
-  = ThrowToken _ argument:Expression EOS {
-      return insertLocationData(new ast.ThrowStatement(argument), text(), line(), column());
-    }
-    
-TryStatement
-  = TryToken __ block:Block __ handler:Catch __ finalizer:Finally {
-      return insertLocationData(new ast.TryStatement(block, handler, finalizer), text(), line(), column());
-    }
-  / TryToken __ block:Block __ handler:Catch {
-      return insertLocationData(new ast.TryStatement(block, handler, null), text(), line(), column());
-    }
-  / TryToken __ block:Block __ finalizer:Finally {
-      return insertLocationData(new ast.TryStatement(block, null, finalizer), text(), line(), column());
-    }
-    
-Catch
-  = CatchToken __ param:Identifier __ body:Block {
-      return insertLocationData(new ast.CatchClause(param, body), text(), line(), column());
-    }
-
-Finally
-  = FinallyToken __ block:Block { return block; }
-
-BreakStatement
-  = BreakToken EOS {
-      return insertLocationData(new ast.BreakStatement(), text(), line(), column());
-    }
-    
-ContinueStatement
-  = ContinueToken EOS {
-      return insertLocationData(new ast.ContinueStatement(), text(), line(), column());
-    }
-    
-FallthroughStatement
-  = FallthroughToken EOS {
-      return insertLocationData(new ast.FallthroughStatement(), text(), line(), column());
-    }  
-    
-ImportDeclarationStatement
-  = ImportToken __ specifiers:ImportSpecifierList __ FromToken __ source:StringLiteral EOS {
-    return insertLocationData(new ast.ImportDeclarationStatement(specifiers, source, "named"), text(), line(), column());
-  }
-  / ImportToken __ "*" __ AsToken __ id:Identifier __ FromToken __ source:StringLiteral EOS {
-    return insertLocationData(new ast.ImportDeclarationStatement([
-      new ast.ImportNamespaceSpecifier(id)
-    ], source, "named"), text(), line(), column());
-  }  
-  / ImportToken __ source:StringLiteral __ AsToken __ id:Identifier EOS {
-    return insertLocationData(new ast.ImportDeclarationStatement([
-      new ast.ImportDefaultSpecifier(id)
-    ], source, "default"), text(), line(), column());
-  }
-  
-ImportSpecifierList
-  = first:ImportSpecifier rest:("," __ ImportSpecifier)* { 
-      return buildList(first, rest, 2); 
-    }
-
-ImportSpecifier
-  = id:Identifier __ AsToken __ alias:Identifier {
-    return insertLocationData(new ast.ImportSpecifier(id, alias), text(), line(), column());
-  }
-  / id:Identifier {
-    return insertLocationData(new ast.ImportSpecifier(id, null), text(), line(), column());
-  }
-  
-ExportDeclarationStatement
-  = ExportToken __ specifiers:ExportSpecifierList source:(__ FromToken __ StringLiteral)? EOS {
-    return insertLocationData(new ast.ExportDeclarationStatement(specifiers, extractOptional(source, 3), null, false), text(), line(), column());
-  }
-  / ExportToken __ "*" __ FromToken __ source:StringLiteral EOS {
-    return insertLocationData(new ast.ExportDeclarationStatement([
-      new ast.ExportBatchSpecifier()
-    ], source, null, false), text(), line(), column());
-  }
-  / ExportToken __ statement:VariableStatement {
-    return insertLocationData(new ast.ExportDeclarationStatement(null, null, statement, false), text(), line(), column());
-  }
-  / ExportToken __ statement:FunctionDeclaration {
-    return insertLocationData(new ast.ExportDeclarationStatement(null, null, statement, false), text(), line(), column());
-  }
-  / ExportToken __ DefaultToken __ expression:Expression EOS {
-    return insertLocationData(new ast.ExportDeclarationStatement(null, null, expression, true), text(), line(), column());
-  }    
-  
-ExportSpecifierList
-  = first:ExportSpecifier rest:("," __ ExportSpecifier)* { 
-      return buildList(first, rest, 2); 
-    }
-
-ExportSpecifier
-  = id:Identifier __ AsToken __ alias:Identifier {
-    return insertLocationData(new ast.ExportSpecifier(id, alias), text(), line(), column());
-  }
-  / id:Identifier {
-    return insertLocationData(new ast.ExportSpecifier(id, null), text(), line(), column());
-  }
-
-DoWhileStatement
-  = DoToken __
-    body:Statement __
-    WhileToken __ test:Expression EOS {
-      return insertLocationData(new ast.DoWhileStatement(test, body), text(), line(), column());
-    }
-    
-PushStatement
-  = left:LeftHandSideExpression __ "<-" __ right:AssignmentExpression EOS {
-      return insertLocationData(new ast.PushStatement(left, right), text(), line(), column()); 
-  }
-  
-GoStatement 
-  = GoToken __ body:Block EOS {
-    return insertLocationData(new ast.GoStatement(body), text(), line(), column());
-  }
-  
-DebuggerStatement
-  = DebuggerToken EOS {
-      return insertLocationData(new ast.DebuggerStatement(), text(), line(), column());
-    }    
-
-WhileStatement
-  = WhileToken __ test:Expression __
-    body:Statement {
-      return insertLocationData(new ast.WhileStatement(test, body), text(), line(), column());
-    }
-    
-UntilStatement
-  = UntilToken __ test:Expression __
-    body:Statement {
-      return insertLocationData(new ast.UntilStatement(test, body), text(), line(), column());
-    }
-
-SwitchStatement
-  = SwitchToken __ discriminant:Expression __ "{" __
-    cases:CaseClauseList __ 
-    "}" {
-      return insertLocationData(new ast.SwitchStatement(discriminant, cases), text(), line(), column());
-    }
-    
-CaseClauseList
-  = first:CaseClause rest:(__ ","? __ CaseClause)* { 
-      return buildList(first, rest, 3); 
-    }
-    
-CaseClause
-  = CaseToken __ tests:CaseClauseTestList __ ":" __ body:Statement {
-      return insertLocationData(new ast.CaseClause(tests, body), text(), line(), column());
-    }
-  / DefaultToken __ ":" __ body:Statement {
-      return insertLocationData(new ast.CaseClause(null, body), text(), line(), column());
-    }
-
-CaseClauseTestList
-  = first:CaseClauseTest rest:("," __ CaseClauseTest)* { 
-      return buildList(first, rest, 2); 
-    }
-
-CaseClauseTest
-  = OptionalRange
-  / Expression
-    
-ForStatement
-  = ForToken __
-    item:Identifier __ 
-    index:("," __ Identifier)? __
-    InToken __ array:Expression __
-    body:Statement {
-      return insertLocationData(new ast.ForInStatement(
-        item,
-        extractOptional(index, 2),
-        array,
-        body
-      ), text(), line(), column());
-    }  
-  / ForToken __
-    key:Identifier __ 
-    value:("," __ Identifier)? __
-    OfToken __ object:Expression __
-    body:Statement {
-      return insertLocationData(new ast.ForOfStatement(
-        key,
-        extractOptional(value, 2),
-        object,
-        body
-      ), text(), line(), column());
-    }
-  / ForToken __
-    VarToken __ declarations:VariableDeclarationList __ ";" __
-    test:(Expression __)? ";" __
-    update:(!("{" __ "}") Expression __)?  __
-    body:Statement {
-      return insertLocationData(new ast.ForStatement(
-        new ast.VariableDeclarationStatement(declarations),
-        extractOptional(test, 0),
-        extractOptional(update, 1),
-        body
-      ), text(), line(), column());
-    }
-  / ForToken __
-    init:(Expression __)? ";" __
-    test:(Expression __)? ";" __
-    update:(!("{" __ "}") Expression __)?  __
-    body:Statement {
-      return insertLocationData(new ast.ForStatement(
-        extractOptional(init, 0),
-        extractOptional(test, 0),
-        extractOptional(update, 1),
-        body
-      ), text(), line(), column());
-    }
-
-UseStatement
-  = UseToken __ identifiers:UseIdentifierList EOS
-    { return new ast.UseStatement(identifiers) }
-
-UseIdentifierList
-  = first:UseIdentifier rest:(__ "," __ UseIdentifier)* {
-      return buildList(first, rest, 3);
-    }
-    
-UseIdentifier
-  = Identifier
-  / ":" id:Identifier {
-    return id.asPredefinedCollection();
-  }
-    
-ExpressionStatement
-  = !("{" / FnToken) expression:Expression EOS {
-      return insertLocationData(new ast.ExpressionStatement(expression), text(), line(), column());
-    }
-
-AssignmentExpression
-  = left:Pattern __ "=" !"=" __ right:AssignmentExpression {
-      return insertLocationData(new ast.AssignmentExpression(
-        left, "=", right), text(), line(), column()); 
-  }
-  / left:ConditionalExpression 
-    assignment:(__ operator:AssignmentOperator __
-    right:AssignmentExpression)? { 
-      if (!assignment) {
-        return left;
-      }
-      
-      return insertLocationData(new ast.AssignmentExpression(
-        left, 
-        extractOptional(assignment, 1), 
-        extractOptional(assignment, 3)), text(), line(), column()); 
-    } 
-  
-AssignmentOperator
-  = "=" !"=" { return "=" }
-  / "*="
-  / "/="
-  / "%="
-  / "+="
-  / "-="
-  / "<<="
-  / ">>="
-  / ">>>="
-  / "&="
-  / "^="
-  / "|="
-
-ConditionalExpression
-  = consequent:LogicalORExpression __
-    condition:(IfToken __ LogicalORExpression __
-    ElseToken __ LogicalORExpression)? {
-      if (condition) {
-        var test = extractOptional(condition, 2);
-        var alternate = extractOptional(condition, 6);
-        
-        return insertLocationData(new ast.ConditionalExpression(test, consequent, alternate), text(), line(), column()); 
-      } else {
-        return consequent;
-      }
-    }
-    
-LogicalORExpression
-  = first:LogicalANDExpression
-    rest:(__ LogicalOROperator __ LogicalANDExpression)*
-    { return buildLogicalExpression(first, rest); }
-    
-LogicalOROperator
-  = "||"
-  / OrToken { return "||"; }
-  
-LogicalANDExpression
-  = first:BitwiseORExpression
-    rest:(__ LogicalANDOperator __ BitwiseORExpression)*
-    { return buildLogicalExpression(first, rest); }
-    
-LogicalANDOperator
-  = "&&"
-  / AndToken { return "&&"; }
-
-BitwiseORExpression
-  = first:BitwiseXORExpression
-    rest:(__ BitwiseOROperator __ BitwiseXORExpression)*
-    { return buildBinaryExpression(first, rest); }
-
-BitwiseOROperator
-  = $("|" ![|=])
-  
-BitwiseXORExpression
-  = first:BitwiseANDExpression
-    rest:(__ BitwiseXOROperator __ BitwiseANDExpression)*
-    { return buildBinaryExpression(first, rest); }
-    
-BitwiseXOROperator
-  = $("^" !"=")
-  
-BitwiseANDExpression
-  = first:EqualityExpression
-    rest:(__ BitwiseANDOperator __ EqualityExpression)*
-    { return buildBinaryExpression(first, rest); }
-
-BitwiseANDOperator
-  = $("&" ![&=])
-  
-EqualityExpression
-  = first:RelationalExpression
-    rest:(__ EqualityOperator __ RelationalExpression)*
-    { return buildBinaryExpression(first, rest); }
-    
-EqualityOperator
-  = "=="
-  / "!="
-
-RelationalExpression
-  = first:InExpression
-    rest:(__ RelationalOperator __ InExpression)*
-    { return buildBinaryExpression(first, rest); }
-
-RelationalOperator
-  = "<="
-  / ">="
-  / $("<" !"<")
-  / $(">" !">")
-  / $InstanceofToken
-
-InExpression
-  = left:NullCoalescingExpression
-    right:(__ InToken __ NullCoalescingExpression)? {
-      if (!right) {
-        return left;
-      }
-      return insertLocationData(new ast.InExpression(left, extractOptional(right, 3)), text(), line(), column());
-    }
-    
-NullCoalescingExpression
-  = first:ShiftExpression
-    rest:(__ "??" __ ShiftExpression)*
-    { return buildNullCoalescingExpression(first, rest); }
-    
-ShiftExpression
-  = first:AdditiveExpression
-    rest:(__ ShiftOperator __ AdditiveExpression)*
-    { return buildBinaryExpression(first, rest); }
-
-ShiftOperator
-  = $("<<"  !"=")
-  / $(">>>" !"=")
-  / $(">>"  !"=")
-
-AdditiveExpression
-  = first:MultiplicativeExpression
-    rest:(__ AdditiveOperator __ MultiplicativeExpression)*
-    { return buildBinaryExpression(first, rest); }
-    
-AdditiveOperator
-  = $("+" ![+=])
-  / $("-" ![-=])  
-
-MultiplicativeExpression
-  = first:ExponentiativeExpression
-    rest:(__ MultiplicativeOperator __ UnaryExpression)*
-    { return buildBinaryExpression(first, rest); }
-
-MultiplicativeOperator
-  = $("*" ![*=])
-  / $("/" !"=")
-  / $("#" !"=")
-  / $("%" ![%=])
-  / $("%%" !"=")  
-
-ExponentiativeExpression
-  = first:UnaryExpression
-    rest:(__ ExponentiativeOperator __ UnaryExpression)*
-    { return buildBinaryExpression(first, rest); }
-
-ExponentiativeOperator
-  = $("**" !"=")
-  
-UnaryExpression
-  = operator:UnaryOperator __ argument:PostfixExpression {
-      if (operator === "++" || operator === "--") {
-        return insertLocationData(new ast.UpdateExpression(argument, operator, true), text(), line(), column());
-      } else {
-        return insertLocationData(new ast.UnaryExpression(operator, argument), text(), line(), column());
-      }
-    }
-  / PostfixExpression
-
-UnaryOperator
-  = $DeleteToken
-  / $TypeofToken
-  / $AsyncToken
-  / $AwaitToken
-  / $NotToken { return "!" }
-  / "<-"
-  / "++"
-  / "--"
-  / $("+" !"=")
-  / $("-" !"=")
-  / "!"
-  
-PostfixExpression
-  = argument:ExistentialExpression _ operator:PostfixOperator? {
-      if (operator) {
-        return insertLocationData(new ast.UpdateExpression(argument, operator, false), text(), line(), column());
-      } else {
-        return argument;
-      }
-    }
-
-PostfixOperator
-  = "++"
-  / "--"
-
-ExistentialExpression
-  = argument:LeftHandSideExpression operator:"?"? !"?" {
-    if (operator) { 
-      return insertLocationData(new ast.ExistentialExpression(argument), text(), line(), column());
-    } else {
-      return argument;
-    }
-  }
-  
-LeftHandSideExpression
-  = CallExpression
-
-CallExpression
-  = first:(
-      callee:MemberExpression call:(__ CallExpressionOperator? __ args:Arguments)? {
-        if (!call) {
-          return callee;
-        }
-        
-        var op = extractOptional(call, 1);
-        if (op === "?") {
-          return insertLocationData(new ast.NullCheckCallExpression(callee, extractOptional(call, 3)), text(), line(), column());
-        } else if (op === "^") {
-          return insertLocationData(new ast.CurryCallExpression(callee, extractOptional(call, 3)), text(), line(), column());
-        } else {
-          return insertLocationData(new ast.CallExpression(callee, extractOptional(call, 3)), text(), line(), column());
-        }
-      }
-    )
-    rest:(
-        __ operator:CallExpressionOperator? __ args:Arguments {
-          var type = "CallExpression";
-          if (operator === "?") {
-            type = "NullCheckCallExpression";
-          } else if (operator === "^") {
-            type = "CurryCallExpression";
-          }
-          
-          return { 
-            type: type, 
-            arguments: args 
-          };
-        }    
-      / __ "[" __ property:Expression __ "]" {
-          return {
-            type:     "MemberExpression",
-            property: property,
-            computed: true
-          };
-        }
-      / __ "[" __ range:OptionalRange __ "]" {
-        return {
-          type: "RangeMemberExpression",
-          range: range   
-        }
-      }        
-      / __ nullPropagatingOperator:"?"? __ "." !"." __ property:IdentifierName {
-          return {
-            type:     nullPropagatingOperator === "?" ? "NullPropagatingExpression" : "MemberExpression",
-            property: property,
-            computed: false
-          };
-        }
-    )*
-    {      
-      return buildTree(first, rest, function(result, element) {
-        if (element.type === "MemberExpression") {
-          return insertLocationData(new ast.MemberExpression(result, element.property, element.computed), text(), line(), column());
-        } if (element.type === "NullPropagatingExpression") {
-          return insertLocationData(new ast.NullPropagatingExpression(result, element.property, element.computed), text(), line(), column());
-        } else if (element.type === "CallExpression") {
-          return insertLocationData(new ast.CallExpression(result, element.arguments), text(), line(), column());
-        } else if (element.type === "CurryCallExpression") {
-          return insertLocationData(new ast.CurryCallExpression(result, element.arguments), text(), line(), column());
-        } else if (element.type === "NullCheckCallExpression") {
-          return insertLocationData(new ast.NullCheckCallExpression(result, element.arguments), text(), line(), column());
-        } else if (element.type === "RangeMemberExpression") {
-          return insertLocationData(new ast.RangeMemberExpression(result, element.range), text(), line(), column());
-        }
-      });
-    }
-    
-CallExpressionOperator
-  = "?"
-  / "^"
-
-MemberExpression
-  = first:( 
-        FunctionExpression
-      / NewToken __ callee:MemberExpression __ args:Arguments {
-          return insertLocationData(new ast.NewExpression(callee, args), text(), line(), column());
-        }
-    )
-    rest:(
-        __ "[" __ property:Expression __ "]" {
-          return { 
-            type: "MemberExpression",
-            property: property, 
-            computed: true
-          };
-        }    
-      / __ nullPropagatingOperator:"?"? __ "." !"." __ property:IdentifierName {
-          return { 
-            type: nullPropagatingOperator === "?" ? "NullPropagatingExpression" : "MemberExpression",
-            property: property, 
-            computed: false 
-          };
-        }
-      / __ "[" __ range:OptionalRange __ "]" {
-        return {
-          type: "RangeMemberExpression",
-          range: range   
-        }
-      }        
-    )*
-    {
-      return buildTree(first, rest, function (result, element) {
-        if (element.type === "NullPropagatingExpression") {
-          return insertLocationData(new ast.NullPropagatingExpression(result, element.property, element.computed), text(), line(), column());
-        } else if (element.type === "MemberExpression") {
-          return insertLocationData(new ast.MemberExpression(result, element.property, element.computed), text(), line(), column());
-        } else if (element.type === "RangeMemberExpression") {
-          return insertLocationData(new ast.RangeMemberExpression(result, element.range), text(), line(), column());
-        }
-      });
-    }
-    
-Arguments
-  = "(" __ args:(ArgumentList __)? ")" {
-      return optionalList(extractOptional(args, 0));
-    }
-    
-ArgumentList
-  = first:Argument rest:(__ "," __ Argument)* {
-      return buildList(first, rest, 3);
-    }
-    
-Argument
-  = expression:AssignmentExpression __ "..." {
-    return insertLocationData(new ast.SplatExpression(expression), text(), line(), column()); 
-  }
-  / AssignmentExpression
-
-FunctionExpression
-  = FnToken __ id:(Identifier __)?
-    "(" __ params:(FormalParameterList __)? ")" __
-    inheritsFrom:InheritsFrom?
-    __ body:Block __
-    {
-      return insertLocationData(new ast.FunctionExpression(
-        extractOptional(id, 0), 
-        optionalList(extractOptional(params, 0)),
-        body,
-        inheritsFrom
-      ), text(), line(), column());
-    }
-  / "(" __ params:(FormalParameterList __)? ")" 
-    __ operator:FunctionExpressionOperator
-    __ body:Block __
-    {      
-      return insertLocationData(new ast.FunctionExpression(
-        null,
-        optionalList(extractOptional(params, 0)),
-        body,
-        null,
-        operator
-      ), text(), line(), column());
-    }    
-  / "(" __ params:(FormalParameterList __)? ")" 
-    __ operator:FunctionExpressionOperator
-    __ body:Expression __
-    {
-      return insertLocationData(new ast.FunctionExpression(
-        null, 
-        optionalList(extractOptional(params, 0)),
-        body,
-        null,
-        operator
-      ), text(), line(), column());
-    }
-  / ForInExpression
-
-FunctionExpressionOperator
-  = "->"
-  / "=>"
-
-ForInExpression
-  = "[" __ 
-    expression:Expression __
-    ForToken __
-    item:Identifier __
-    index:("," __ Identifier __)?
-    InToken __
-    array:Expression __
-    condition:(IfToken __ Expression __)? 
-    "]" {
-      return insertLocationData(new ast.ForInExpression(
-        expression,
-        item,
-        index ? extractOptional(index, 2) : null,
-        array,
-        condition ? extractOptional(condition, 2) : null
-      ), text(), line(), column());
-    }
-  / GlobalIdentifierExpression
-    
-GlobalIdentifierExpression
-  = "::" __ id:Identifier
-    { return id.asGlobal(); }
-  / PrimaryExpression
-  
-PrimaryExpression
-  = ThisExpression
-  / SuperExpression
-  / RangeExpression
-  / Identifier
-  / Literal
-  / ArrayLiteral
-  / ObjectLiteral
-  / "(" __ expression:Expression __ ")" { return expression; }
-
-ThisExpression
-  = ThisToken {
-      return insertLocationData(new ast.ThisExpression(), text(), line(), column());
-    }
-    
-SuperExpression
-  = SuperToken {
-      return insertLocationData(new ast.SuperExpression(), text(), line(), column());
-    }
-
-RangeExpression
-  = "[" __ range:Range __ "]" {
-    return range;
-  }
-
-Range
-  = from:Expression __ operator:RangeOperator __ to:Expression {
-    return insertLocationData(new ast.Range(from, operator, to), text(), line(), column());
-  }
-  
-OptionalRange
-  = from:Expression? __ operator:RangeOperator __ to:Expression? {
-    return insertLocationData(new ast.Range(from, operator, to), text(), line(), column());
-  }
-  
-RangeOperator 
-  = ".." !"." { return ".."; }
-  / "..."
-  
-Expression
-  = expression:AssignmentExpression {
-      return expression;
-    }
-      
-ArrayLiteral
-  = "[" __ elision:(Elision __)? "]" {
-      return insertLocationData(new ast.ArrayExpression(optionalList(extractOptional(elision, 0))), text(), line(), column());
-    }
-  / "[" __ elements:ElementList __ "]" {
-      return insertLocationData(new ast.ArrayExpression(elements), text(), line(), column());
-    }
-  / "[" __ elements:ElementList __ "," __ elision:(Elision __)? "]" {
-      return insertLocationData(new ast.ArrayExpression(elements.concat(optionalList(extractOptional(elision, 0)))), text(), line(), column());
-    }
-
-ElementList
-  = first:(
-      elision:(Elision __)? element:AssignmentExpression {
-        return optionalList(extractOptional(elision, 0)).concat(element);
-      }
-    )
-    rest:(
-      __ "," __ elision:(Elision __)? element:AssignmentExpression {
-        return optionalList(extractOptional(elision, 0)).concat(element);
-      }
-    )*
-    { return Array.prototype.concat.apply(first, rest); }
-    
-ArrayPattern
-  = "[" __ elision:(Elision __)? "]" {
-      return insertLocationData(new ast.ArrayPattern(optionalList(extractOptional(elision, 0))), text(), line(), column());
-    }
-  / "[" __ elements:PatternElementList __ "]" {
-      return insertLocationData(new ast.ArrayPattern(elements), text(), line(), column());
-    }
-  / "[" __ elements:PatternElementList __ "," __ elision:(Elision __)? "]" {
-      return insertLocationData(new ast.ArrayPattern(elements.concat(optionalList(extractOptional(elision, 0)))), text(), line(), column());
-    }
-
-PatternElementList
-  = first:(
-      elision:(Elision __)? element:PatternElement {
-        return optionalList(extractOptional(elision, 0)).concat(element);
-      }
-    )
-    rest:(
-      __ "," __ elision:(Elision __)? element:PatternElement {
-        return optionalList(extractOptional(elision, 0)).concat(element);
-      }
-    )*
-    { return Array.prototype.concat.apply(first, rest); }
-
-PatternElement
-  = Identifier
-  / ArrayPattern
-  
-Elision
-  = "," commas:(__ ",")* { return filledArray(commas.length + 1, null); }
-
-ObjectLiteral
-  = "{" __ "}" { 
-       return  new ast.ObjectExpression([]); 
-     }
-  / "{" __ properties:PropertyNameAndValueList __ "}" {
-       return insertLocationData(new ast.ObjectExpression(properties), text(), line(), column());
-     }
-  / "{" __ properties:PropertyNameAndValueList __ "," __ "}" {
-       return insertLocationData(new ast.ObjectExpression(properties), text(), line(), column());
-     }
-     
-PropertyNameAndValueList
-  = first:PropertyAssignment rest:(__ "," __ PropertyAssignment)* {
-      return buildList(first, rest, 3);
-    }
-
-PropertyAssignment
-  = key:PropertyName __ ":" __ value:AssignmentExpression {
-      return insertLocationData(new ast.Property(key, value, false, false), text(), line(), column());
-    }
-  / key:PropertyName __ 
-    "(" __ params:(FormalParameterList __)? ")"
-    __ body:Block __
-    {
-      return insertLocationData(new ast.Property(key, new ast.FunctionExpression(
-        null, 
-        optionalList(extractOptional(params, 0)),
-        body,
-        null
-      ), false, true), text(), line(), column());
-    }    
-  / key:IdentifierName {
-    return insertLocationData(new ast.Property(key, key, true, false), text(), line(), column());
-  }
-
-PropertyName
-  = IdentifierName
-  / StringLiteral
-  / NumericLiteral
-  
-ObjectPattern
-  = "{" __ "}" { 
-       return  new ast.ObjectPattern([]); 
-     }
-  / "{" __ properties:PatternPropertyNameAndValueList __ "}" {
-       return insertLocationData(new ast.ObjectPattern(properties), text(), line(), column());
-     }
-  / "{" __ properties:PatternPropertyNameAndValueList __ "," __ "}" {
-       return insertLocationData(new ast.ObjectPattern(properties), text(), line(), column());
-     }
-     
-PatternPropertyNameAndValueList
-  = first:PatternPropertyAssignment rest:(__ "," __ PatternPropertyAssignment)* {
-      return buildList(first, rest, 3);
-    }
-
-PatternPropertyAssignment
-  = key:IdentifierName __ ":" __ value:IdentifierName {
-      return insertLocationData(new ast.Property(key, value, false, false), text(), line(), column());
-    }
-  / key:IdentifierName __ ":" __ value:ObjectPattern {
-      return insertLocationData(new ast.Property(key, value, false, false), text(), line(), column());
-    }
-  / key:IdentifierName {
-    return insertLocationData(new ast.Property(key, key, true, false), text(), line(), column());
-  }    
-
-Pattern
-  = ObjectPattern
-  / ArrayPattern

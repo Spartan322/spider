@@ -1,0 +1,23 @@
+use :node;
+
+var Node = module.require('../Node').Node,
+    traceur = require("traceur");
+
+fn JavascriptLiteralExpression(raw)
+  extends Node {
+  
+  this.type = "JavascriptExpression";
+  this["JavascriptLiteralExpression"] = raw;
+}
+
+JavascriptLiteralExpression.prototype.codegen = () -> {
+  if !super.codegen() {
+    return;
+  }
+  
+  return this;
+};
+
+JavascriptLiteralExpression.prototype.hasCallExpression = () -> false;
+
+exports.JavascriptLiteralExpression = JavascriptLiteralExpression;
