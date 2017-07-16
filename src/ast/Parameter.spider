@@ -55,7 +55,13 @@ Parameter.generateFunctionBody = (func, params, body, defaults) -> {
 
     param = param.codegen();
     defaults.push(param.defaultValue);
-    params[i] = param.id;
+    if param.defaultValue? {
+      params[i] = {
+        type: "AssignmentPattern",
+        left: param.id,
+        right: param.defaultValue
+      };
+    } else params[i] = param.id;
     func.defineIdentifier(param.id);
   }
 
@@ -80,7 +86,7 @@ Parameter.generateFunctionBody = (func, params, body, defaults) -> {
             "name": "arguments"
           },
           "property": {
-            "type": "Literal",
+            "type": "NumericLiteral",
             "value": i
           }
         };
@@ -91,7 +97,7 @@ Parameter.generateFunctionBody = (func, params, body, defaults) -> {
             "type": "BinaryExpression",
             "operator": "<=",
             "left": {
-              "type": "Literal",
+              "type": "NumericLiteral",
               "value": params.length
             },
             "right": {
@@ -133,7 +139,7 @@ Parameter.generateFunctionBody = (func, params, body, defaults) -> {
               "type": "Identifier",
               "name": "arguments"
             }, {
-              "type": "Literal",
+              "type": "NumericLiteral",
               "value": splatPosition
             }]
           },
@@ -167,7 +173,7 @@ Parameter.generateFunctionBody = (func, params, body, defaults) -> {
                 }
               },
               "right": {
-                "type": "Literal",
+                "type": "NumericLiteral",
                 "value": params.length - splatPosition - 1
               }
             }
@@ -183,7 +189,7 @@ Parameter.generateFunctionBody = (func, params, body, defaults) -> {
                 "name": "__splat"
               },
               "right": {
-                "type": "Literal",
+                "type": "NumericLiteral",
                 "value": splatPosition
               }
             }, {

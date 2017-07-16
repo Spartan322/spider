@@ -1,13 +1,10 @@
 use :node;
 
 module.exports = fn (grunt) {
-  require('traceur');
-  
   // Show elapsed time at the end
   require('time-grunt')(grunt);
   // Load all grunt tasks
   require('load-grunt-tasks')(grunt);
-
   // Project configuration.
   grunt.initConfig({
     nodeunit: {
@@ -63,9 +60,9 @@ module.exports = fn (grunt) {
       build: ["lib/"],
     },
     spider_script: {
-      options: {},
+      options: { target: "ES6" },
       build: {
-        files: [{
+        files: [{ 'Gruntfile.js': 'Gruntfile.spider' }, {
           expand: true,
           cwd: 'src',
           src: ['**/*.spider'],

@@ -22,21 +22,21 @@ StringLiteral.prototype.codegen = () -> {
     
     if typeof value == 'string' {
       lastElement = elements[elements.length - 1];
-      if lastElement?.type == 'Literal' {
+      if lastElement?.type == 'StringLiteral' {
         lastElement.value += value;
       } else {
         elements.push({
-          type: 'Literal',
+          type: 'StringLiteral',
           value: value
         });
       }
     } else if value?.type == "StringLiteralNewLine" {
       lastElement = elements[elements.length - 1];
-      if lastElement?.type == 'Literal' {
+      if lastElement?.type == 'StringLiteral' {
         lastElement.value += value.toString(this.column - 1);
       } else {
         elements.push({
-          type: 'Literal',
+          type: 'StringLiteral',
           value: value.toString(this.column - 1)
         });
       }
@@ -48,7 +48,7 @@ StringLiteral.prototype.codegen = () -> {
   
   if elements.length == 0 {
     return {
-      "type": "Literal",
+      "type": "StringLiteral",
       "value": ""
     };
   } else if elements.length == 1 {

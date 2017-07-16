@@ -5,9 +5,9 @@ var Node = module.require('../Node').Node;
 fn NumberLiteral(text)
   extends Node {
   
-  this.type = 'Literal';
+  this.type = 'NumericLiteral';
   this.value = ::Number(text);
-  this.raw = text;
+  this.extra = { raw: text };
 }
 
 NumberLiteral.prototype.codegen = () -> { 

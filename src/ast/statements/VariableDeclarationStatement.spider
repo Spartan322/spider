@@ -19,13 +19,11 @@ VariableDeclarationStatement.prototype.codegen = () -> {
     return;
   }
   
-  var i = 0;
-  while (i < this.declarations.length) {
-    var statement = this.declarations[i].codegen();
+  for statement, i in this.declarations {
+    statement = statement.codegen();
     if statement? {
       this.declarations[this.declarations.indexOf(statement)] = statement;
     }
-    i++;
   }
   
   return this;

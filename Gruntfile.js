@@ -1,7 +1,6 @@
 "use strict";
 (function () {
     module.exports = function (grunt) {
-        require("traceur");
         require("time-grunt")(grunt);
         require("load-grunt-tasks")(grunt);
         grunt.initConfig({
@@ -58,15 +57,18 @@
             },
             clean: { build: ["lib/"] },
             spider_script: {
-                options: {},
+                options: { target: "ES6" },
                 build: {
-                    files: [{
+                    files: [
+                        { "Gruntfile.js": "Gruntfile.spider" },
+                        {
                             expand: true,
                             cwd: "src",
                             src: ["**/*.spider"],
                             dest: "lib/",
                             ext: ".js"
-                        }]
+                        }
+                    ]
                 }
             },
             copy: {

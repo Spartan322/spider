@@ -54,9 +54,7 @@ ExistentialExpression.prototype.codegen = () -> {
     "operator": "!==",
     "left": this.argument,
     "right": {
-      "type": "Literal",
-      "value": null,
-      "raw": "null"
+      "type": "NullLiteral"
     }
   };
   
@@ -73,9 +71,9 @@ ExistentialExpression.prototype.codegen = () -> {
       "prefix": true
     },
     "right": {
-      "type": "Literal",
+      "type": "StringLiteral",
       "value": "undefined",
-      "raw": "'undefined'"
+      "extra": { "raw": "'undefined'"} 
     }
   };
   

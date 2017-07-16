@@ -25,6 +25,8 @@ ImportSpecifier.prototype.codegen = () -> {
   
   if this.id? {
     this.id = this.id.codegen(false);
+    this.imported = this.id;
+    this.local = this.alias ?? this.id;
   } else {
     this.type = "ImportNamespaceSpecifier";
   }

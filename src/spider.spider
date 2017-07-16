@@ -1,9 +1,9 @@
 use :node;
 
 var parser = module.require('./parser'),
-    escodegen = require('escodegen'),
     ast = module.require('./ast'),
-    traceur = require("traceur"),
+    babel = require("babel-core"),
+    generate = require("babel-generator").default,
     chalk = require("chalk"),
     transfer = require("multi-stage-sourcemap").transfer;
 
@@ -54,39 +54,35 @@ exports.compile = fn (options) {
       options.useStrict ?? true,
       options.iifi ?? true);
   }
-
-  var output = escodegen.generate(tree, {
-    sourceMap: options.fileName if options.generateSourceMap else null,
-    sourceMapWithCode: options.generateSourceMap,
-    format: {
-      quotes: 'double'
-    }
-  });
-
-  if options.generateSourceMap {
-    result.result = output.code;
-    result.sourceMap = output.map.toString();
-  } else {
-    result.result = output;
-  }
+  
+  var generatorOpts = {
+    sourceMaps: options.generateSourceMap,
+    sourceMapTarget: options.fileName if options.generateSourceMap else null,
+    filename: options.fileName if options.generateSourceMap else null,
+    quotes: "double"
+  };
 
   if options.target == "ES5" {
-    var traceurCompiler = new traceur.NodeCompiler({
-      sourceMaps: options.generateSourceMap,
-      modules: options.modules,
-      asyncFunctions: true
+    console.log(result.sourceMap);
+    
+    var babelResult = babel.transformFromAst(tree, options.text,
+    {
+      filename: generatorOpts.filename,
+      sourceMaps: generatorOpts.sourceMaps,
+      sourceMapTarget: generatorOpts.sourceMapTarget,
+      generatorOpts
     });
-
-    result.result = traceurCompiler.compile(result.result, options.fileName, outFileName);
-
+    result.result = babelResult.code;
+    if options.generateSourceMap { result.sourceMap = babelResult.map; }
+  } else if options.target == "ES6" {
+    var output = generate(tree, generatorOpts, options.text);
+    
     if options.generateSourceMap {
-      result.sourceMap = transfer({
-        toSourceMap: result.sourceMap,
-        fromSourceMap: traceurCompiler.getSourceMap().toString()
-      });
+      result.result = output.code + "\n\n//# sourceMappingURL=" + mapFileName;
+      result.sourceMap = output.map;
+    } else {
+      result.result = output.code;
     }
-  } else if options.generateSourceMap {
-    result.result = result.result + "\n\n//# sourceMappingURL=" + mapFileName;
   }
 
   if options.verbose {
@@ -205,15 +201,15 @@ fn wrapCode(tree, useStrict = false, iifi = false) {
   if iifi or useStrict {
     var body = [];
 
-    if useStrict {
+    /*if useStrict {
       body.push({
         "type": "ExpressionStatement",
         "expression": {
-          "type": "Literal",
+          "type": "StringLiteral",
           "value": "use strict"
         }
       });
-    }
+    }*/
 
     // Add (function () { ... })()
     if iifi {
@@ -243,7 +239,18 @@ fn wrapCode(tree, useStrict = false, iifi = false) {
 
     tree = {
       "type": "Program",
-      "body": body
+      "body": body,
+      "directives": [{
+        "type": "Directive",
+        "value": {
+          "type": "DirectiveLiteral",
+          "value": "use strict",
+          "extra": {
+            "raw": "\"use strict\"",
+            "rawValue": "use strict"
+          }
+        }
+      }] if useStrict else null
     };
   }
 

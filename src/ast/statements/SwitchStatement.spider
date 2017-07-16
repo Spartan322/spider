@@ -82,7 +82,7 @@ SwitchStatement.prototype.codegen = () -> {
             "operator": "=",
             "left": this.fallthroughId,
             "right": {
-              "type": "Literal",
+              "type": "NumericLiteral",
               "value": 2
             }
           }
@@ -124,7 +124,7 @@ SwitchStatement.prototype.codegen = () -> {
           "type": "VariableDeclarator",
           "id": this.fallthroughId,
           "init": {
-            "type": "Literal",
+            "type": "NumericLiteral",
             "value": 0
           }
         }

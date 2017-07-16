@@ -22,6 +22,8 @@ ExportSpecifier.prototype.codegen = () -> {
   }
   
   this.id = this.id.codegen(false);
+  this.exported = this.alias ?? this.id;
+  this.local = this.id;
   
   ::Object.defineProperty(this, 'name', { 
     value: {

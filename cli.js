@@ -5,7 +5,6 @@
 var fs = require("fs"),
     path = require("path"),
     vm = require("vm"),
-    traceur = require("traceur"),
     nomnom = require("nomnom"),
     chalk = require("chalk"),
     spider = require("./lib/spider");

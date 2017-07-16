@@ -71,7 +71,7 @@ Range.prototype.codegen = () -> {
         test.call(this, i);
         i++ if updateOperator == '++' else i-- {
       this.elements.push({
-        "type": "Literal",
+        "type": "NumericLiteral",
         "value": i
       });
     }

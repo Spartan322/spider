@@ -22,7 +22,6 @@ ObjectPattern.prototype.codegen = () -> {
   for property, i in this.properties {
     this.properties[i] = property.codegen();
     
-    
     if property.value? {
       if property.value.type == "Identifier" {
         context.defineIdentifier(property.value);

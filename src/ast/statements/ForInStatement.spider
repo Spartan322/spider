@@ -39,7 +39,7 @@ ForInStatement.prototype.codegen = () -> {
         "type": "VariableDeclarator",
         "id": this.index,
         "init": {
-          "type": "Literal",
+          "type": "NumericLiteral",
           "value": 0
         }
       }],

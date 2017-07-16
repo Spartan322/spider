@@ -5,9 +5,9 @@ var Node = module.require('../Node').Node;
 fn BooleanLiteral(text)
   extends Node {
   
-  this.type = 'Literal';
+  this.type = 'BooleanLiteral';
   this.value = text == "true";
-  this.raw = text;
+  this.extra = { raw: text };
 }
 
 BooleanLiteral.prototype.codegen = () -> { 

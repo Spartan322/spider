@@ -50,7 +50,7 @@ RangeMemberExpression.prototype.codegen = () -> {
     
     var to;
     var start = this.range.start.codegen() if this.range.start else {
-                 "type": "Literal",
+                 "type": "NumericLiteral",
                  "value": 0
                };   
     
@@ -58,7 +58,7 @@ RangeMemberExpression.prototype.codegen = () -> {
       if isNumber(start.value) &&
          isNumber(this.range.to.value) {
         to = {
-          "type": "Literal",
+          "type": "NumericLiteral",
           "value": this.range.to.value - start.value + (1 if this.range.operator == '..' else 0)
         };
       } else {
@@ -79,7 +79,7 @@ RangeMemberExpression.prototype.codegen = () -> {
             "operator": "+",
             "left": to,
             "right": {
-              "type": "Literal",
+              "type": "NumericLiteral",
               "value": 1
             }
           };
@@ -87,9 +87,9 @@ RangeMemberExpression.prototype.codegen = () -> {
       }          
     } else {
       to = {
-        "type": "Literal",
+        "type": "NumericLiteral",
         "value": 9000000000,
-        "raw": "9e9"
+        "extra": { "raw": "9e9" }
       };
     }  
   
@@ -135,7 +135,7 @@ RangeMemberExpression.prototype.codegen = () -> {
     
     if !this.range.start? {
       args.push({
-        "type": "Literal",
+        "type": "NumericLiteral",
         "value": 0
       });
     } else {
@@ -148,7 +148,7 @@ RangeMemberExpression.prototype.codegen = () -> {
       } else {
         if this.range.to.value && isNumber(this.range.to.value) {
           args.push({
-            "type": "Literal",
+            "type": "NumericLiteral",
             "value": this.range.to.value + 1
           });
         } else {
@@ -157,7 +157,7 @@ RangeMemberExpression.prototype.codegen = () -> {
             "operator": "+",
             "left": this.range.to.codegen(),
             "right": {
-              "type": "Literal",
+              "type": "NumericLiteral",
               "value": 1
             }          
           });

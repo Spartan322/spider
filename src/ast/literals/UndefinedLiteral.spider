@@ -16,7 +16,7 @@ UndefinedLiteral.prototype.codegen = () -> {
   this.type = "UnaryExpression";
   this.operator = "void";
   this.argument = {
-    "type": "Literal",
+    "type": "NumericLiteral",
     "value": 0,
     "raw": "0"
   };

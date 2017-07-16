@@ -22,18 +22,16 @@ GoStatement.prototype.codegen = () -> {
   this.expression = {
     "type": "CallExpression",
     "callee": {
-      "type": "UnaryExpression",
-      "operator": "async",
-      "argument": {
-        "type": "FunctionExpression",
-        "id": null,
-        "params": [],
-        "defaults": [],
-        "body": this.body,
-        "rest": null,
-        "generator": false,
-        "expression": false
-      }
+      "type": "FunctionExpression",
+      "id": null,
+      "params": [],
+      "defaults": [],
+      "body": this.body,
+      "rest": null,
+      "generator": false,
+      "expression": false,
+      "async": true,
+      "extra": { "parenthesized": true }
     },
     "arguments": []
   };

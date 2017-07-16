@@ -78,9 +78,9 @@ NullCheckCallExpression.prototype.codegen = () -> {
       "prefix": true
     },
     "right": {
-      "type": "Literal",
+      "type": "StringLiteral",
       "value": "function",
-      "raw": "\"function\""
+      "extra": { "raw": "\"function\"" }
     }
   };
   
@@ -124,9 +124,9 @@ NullCheckCallExpression.prototype.codegen = () -> {
       "type": "UnaryExpression",
       "operator": "void",
       "argument": {
-        "type": "Literal",
+        "type": "NumericLiteral",
         "value": 0,
-        "raw": "0"
+        "extra": { "raw": "0" }
       },
       "prefix": true
     };

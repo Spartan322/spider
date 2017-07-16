@@ -5,23 +5,28 @@ var Node = module.require('../Node').Node;
 fn ExportDeclarationStatement(specifiers, source, declaration, isDefault)
   extends Node {
   
-  this.type = "ExportDeclaration";
+  this.type = "ExportNamedDeclaration";
+  if isDefault {
+    this.type = "ExportDefaultDeclaration";
+  } else if specifiers? && specifiers[0]?.type == "ExportBatchSpecifier" {
+    this.type = "ExportAllDeclaration";
+  }
   this['default'] = isDefault;
   
   this.specifiers = specifiers;
-  if specifiers? {
+  if this.specifiers? {
     for specifier in this.specifiers {
       specifier.parent = this;
     }
   }
   
   this.source = source;
-  if source? {
+  if this.source? {
     this.source.parent = this;
   }
   
   this.declaration = declaration;
-  if declaration? {
+  if this.declaration? {
     this.declaration.parent = this;
   }
 }

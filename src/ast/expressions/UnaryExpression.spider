@@ -65,14 +65,15 @@ UnaryExpression.prototype.codegen = () -> {
               }
             },
             "arguments": [{
-              "type": "Literal",
-              "value": new ::RegExp("\\s([a-zA-Z]+)")
+              "type": "RegExpLiteral",
+              "pattern": "\\s([a-zA-Z]+)",
+              "flags": ""
             }]
           },
           "property": {
-            "type": "Literal",
+            "type": "NumericLiteral",
             "value": 1,
-            "raw": "1"
+            "extra": { "raw": "1" }
           }
         },
         "property": {
@@ -95,14 +96,14 @@ UnaryExpression.prototype.codegen = () -> {
           "prefix": true
         },
         "right": {
-          "type": "Literal",
+          "type": "StringLiteral",
           "value": "undefined",
-          "raw": "'undefined'"
+          "extra": { "raw": "'undefined'" }
         }
       };
       
       this.consequent = {
-        "type": "Literal",
+        "type": "StringLiteral",
         "value": "undefined"
       };
       
@@ -121,10 +122,7 @@ UnaryExpression.prototype.codegen = () -> {
       parent = parent.parent;
     }
     
-    if not parent? or
-       (parent.type != "GoStatement" and 
-          (parent.parent.type != "UnaryExpression" or
-          parent.parent.operator != "async")) {
+    if !parent? || (parent.type != "GoStatement" && (parent.parent.type != "UnaryExpression" || parent.parent.operator != "async")) {
       Node.getErrorManager().error({
         type: "GetExpressionRequiresAsync",
         message: "unary <- must be in a go statement or an async function",
@@ -132,7 +130,7 @@ UnaryExpression.prototype.codegen = () -> {
       });
     }
         
-    this.operator = "await";
+    this.operator = "await ";
     this.argument = {
       "type": "CallExpression",
       "callee": {

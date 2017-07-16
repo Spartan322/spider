@@ -5,7 +5,7 @@ var Node = module.require('../Node').Node;
 fn RegularExpressionLiteral(pattern, flags)
   extends Node {
   
-  this.type = 'Literal';
+  this.type = 'RegExpLiteral';
   this.pattern = pattern;
   this.flags = flags;
 }

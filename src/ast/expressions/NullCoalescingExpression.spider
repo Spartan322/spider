@@ -61,9 +61,7 @@ NullCoalescingExpression.prototype.codegen = () -> {
     "operator": "==",
     "left": this.left,
     "right": {
-      "type": "Literal",
-      "value": null,
-      "raw": "null"
+      "type": "NullLiteral"
     }
   };
 
@@ -85,9 +83,9 @@ NullCoalescingExpression.prototype.codegen = () -> {
           "prefix": true
         },
         "right": {
-          "type": "Literal",
+          "type": "StringLiteral",
           "value": "undefined",
-          "raw": "'undefined'"
+          "extra": { "rawValue": "undefined", "raw": "\"undefined\"" }
         }
       },
       "right": test

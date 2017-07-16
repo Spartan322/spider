@@ -47,8 +47,7 @@ CallExpression.prototype.codegen = () -> {
     var argsClone = args.slice(0);
     args.length = 0;
     args.push({ 
-      "type": "Literal", 
-      "value": null
+      "type": "NullLiteral"
     });
     
     if argsClone.length == 1 {

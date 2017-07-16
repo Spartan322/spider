@@ -17,6 +17,7 @@ ImportNamespaceSpecifier.prototype.codegen = () -> {
   }
   
   this.id = this.id.codegen(false);
+  this.local = this.id;
   this.getContext().node.defineIdentifier(this.id);
   
   return this;

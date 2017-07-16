@@ -131,7 +131,7 @@ SuperExpression.prototype.codegen = () -> {
 
       // Make sure that the syntax is something like:
       // Fn.prototype = { test: fn () { ... } }
-      if contextNode?.type != 'Property' ||
+      if contextNode?.type != 'ObjectProperty' ||
          contextNode?.value?.type != 'FunctionExpression' {
         Node.getErrorManager().error({
           type: "InvalidUsageForSuper",

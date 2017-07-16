@@ -1,7 +1,6 @@
 use :node;
 
-var Node = module.require('../Node').Node,
-    traceur = require("traceur");
+var Node = module.require('../Node').Node;
 
 fn JavascriptLiteralExpression(raw)
   extends Node {

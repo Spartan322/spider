@@ -5,9 +5,7 @@ var Node = module.require('../Node').Node;
 fn NullLiteral()
   extends Node {
   
-  this.type = 'Literal';
-  this.value = null;
-  this.raw = "null";
+  this.type = 'NullLiteral';
 }
 
 NullLiteral.prototype.codegen = () -> {

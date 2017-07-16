@@ -68,9 +68,7 @@ NullPropagatingExpression.prototype.codegen = () -> {
       "operator": "!==",
       "left": this.object,
       "right": {
-        "type": "Literal",
-        "value": null,
-        "raw": "null"
+        "type": "NullLiteral"
       },
       "__member_expression": {
         "type": "MemberExpression",
@@ -97,9 +95,7 @@ NullPropagatingExpression.prototype.codegen = () -> {
           "computed": false
         },
         "right": {
-          "type": "Literal",
-          "value": null,
-          "raw": "null"
+          "type": "NullLiteral"
         },
       },
       "__member_expression": {
@@ -130,9 +126,9 @@ NullPropagatingExpression.prototype.codegen = () -> {
         "argument": this.object.__first_object ?? this.object
       },
       "right": {
-        "type": "Literal",
+        "type": "StringLiteral",
         "value": "undefined",
-        "raw": "\"undefined\""
+        "extra": { "raw": "\"undefined\"" }
       },
     },
     "right": condition
@@ -152,9 +148,9 @@ NullPropagatingExpression.prototype.codegen = () -> {
       "type": "UnaryExpression",
       "operator": "void",
       "argument": {
-        "type": "Literal",
+        "type": "NumericLiteral",
         "value": 0,
-        "raw": "0"
+        "extra": { "raw": "0" }
       },
       "prefix": true
     },

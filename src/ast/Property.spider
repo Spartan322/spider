@@ -5,12 +5,12 @@ var Node = module.require('./Node').Node;
 fn Property(key, value, shorthand, method)
   extends Node {
   
-  this.type = 'Property';
-  this.kind = 'init';
+  this.type = 'ObjectMethod' if method else 'ObjectProperty';
+  this.kind = 'method' if method else 'init';
   this.method = method;
   this.shorthand = shorthand;
   this.computed = false;
-                
+    
   this.key = key;
   this.key.parent = this;
   
@@ -24,7 +24,14 @@ Property.prototype.codegen = () -> {
   }
   
   this.key = this.key.codegen(false);
-  this.value = this.value.codegen(this.parent.type != "ObjectPattern");
+  this.value = this.key if this.shorthand else this.value.codegen(this.parent.type != "ObjectPattern");
+  
+  if this.method {
+    this.params = this.value.params;
+    this.body = this.value.body;
+    this.id = null;
+    delete this.value;
+  }
   
   return this;
 };

@@ -86,7 +86,7 @@ CaseClause.prototype.codegen = (branchFallthrough) -> {
             }
           },
           "right": {
-            "type": "Literal",
+            "type": "NumericLiteral",
             "value": test.elements.length
           }
         };
@@ -105,7 +105,7 @@ CaseClause.prototype.codegen = (branchFallthrough) -> {
                   "computed": true,
                   "object": this.parent.discriminant,
                   "property": {
-                    "type": "Literal",
+                    "type": "NumericLiteral",
                     "value": i
                   }
                 },
@@ -154,7 +154,7 @@ CaseClause.prototype.codegen = (branchFallthrough) -> {
       "left": this.parent.fallthroughId,
       "operator": "<",
       "right": {
-        "type": "Literal",
+        "type": "NumericLiteral",
         "value": 2
       }
     };
