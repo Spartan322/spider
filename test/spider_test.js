@@ -834,6 +834,7 @@ describe('assignment expressions:', function () {
   it('bitwise AND assignment',         generateTest('x &= a;',   'x &= a;'));
   it('bitwise XOR assignment',         generateTest('x ^= a;',   'x ^= a;'));
   it('bitwise OR assignment',          generateTest('x |= a;',   'x |= a;'));
+  it('null coalescing assignment',     generateTest('x ?= a;',   'x = x == null ? a : x;'))
 });
 
 describe('if statement:', function () {

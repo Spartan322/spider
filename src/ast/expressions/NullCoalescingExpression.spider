@@ -4,41 +4,41 @@ var Node = module.require('../Node').Node;
 
 fn NullCoalescingExpression(left, right)
   extends Node {
-  
+
   this.type = 'NullCoalescingExpression';
-  
+
   this.left = left;
   this.left.parent = this;
-  
+
   this.right = right;
   this.right.parent = this;
 }
 
-NullCoalescingExpression.prototype.codegen = () -> {
+NullCoalescingExpression.prototype.codegen = (ignoreUndefined = false) -> {
   if !super.codegen() {
     return;
   }
-  
+
   var leftType = this.left.type;
-  
+
   this.left = this.left.codegen();
   this.right = this.right.codegen();
-  
+
   var context = this.getContext();
-  var addUndefinedCheck = true;
-  
+  var addUndefinedCheck = !ignoreUndefined;
+
   // If the left expression is a function call (e.g: f() ?? 5)
   // then store its value in a separate variable to avoid
   // calling the function twice.
   if leftType == 'NullPropagatingExpression' ||
      leftType == 'NullCoalescingExpression' ||
      this.left.hasCallExpression?() {
-         
+
     var id = {
       "type": "Identifier",
-      "name": NullCoalescingExpression.getNextLeftName()
+      "name": this.getNextLeftName()
     };
-    
+
     context.node.body.splice(context.position, 0, {
       "type": "VariableDeclaration",
       "declarations": [
@@ -51,11 +51,11 @@ NullCoalescingExpression.prototype.codegen = () -> {
       "kind": "let",
       "codeGenerated": true
     });
-    
+
     this.left = id;
     addUndefinedCheck = false;
   }
-   
+
   var test = {
     "type": "BinaryExpression",
     "operator": "==",
@@ -95,15 +95,15 @@ NullCoalescingExpression.prototype.codegen = () -> {
   // If the null coalescing operator is an expression
   // statement child, the generated JS should be an if statement.
   if this.parent?.type == 'ExpressionStatement' {
-    
+
     if !this.right.hasCallExpression() {
       this.parent.type = 'EmptyStatement';
       return this;
     }
-    
+
     this.parent.type = 'IfStatement';
     this.parent.test = test;
-        
+
     this.parent.consequent = {
       "type": "BlockStatement",
       "body": [
@@ -114,12 +114,12 @@ NullCoalescingExpression.prototype.codegen = () -> {
       ]
     };
   } else {
-    // Otherwise - if the null coalescing operator is 
-    // inside an expression, the generated JS should 
+    // Otherwise - if the null coalescing operator is
+    // inside an expression, the generated JS should
     // look like:
-    // 
+    //
     // typeof left === 'undefined' || left === null ? right : left
-    
+
     return {
       "type": "ConditionalExpression",
       "test": test,
@@ -134,12 +134,15 @@ NullCoalescingExpression.prototype.hasCallExpression = () -> {
          this.right?.hasCallExpression();
 };
 
-NullCoalescingExpression.getNextLeftName = () -> {
-  if (!this.nullCoalescingIndex?) { 
-    this.nullCoalescingIndex = 0; 
+NullCoalescingExpression.prototype.getNextLeftName = () -> {
+  if (!NullCoalescingExpression.nullCoalescingIndex?) {
+    NullCoalescingExpression.nullCoalescingIndex = 0;
   }
 
-  return "nullCoalescing" + this.nullCoalescingIndex++;
+  var result = "nullCoalescing" + NullCoalescingExpression.nullCoalescingIndex;
+
+  while this.isIdentifierDefined(result = "nullCoalescing" + NullCoalescingExpression.nullCoalescingIndex++) {}
+  return result;
 };
 
 NullCoalescingExpression.resetVariableNames = () -> {

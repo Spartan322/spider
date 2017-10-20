@@ -1,31 +1,41 @@
 use :node;
 
-var Node = module.require('../Node').Node;
+var Node = module.require('../Node').Node,
+    UndefinedLiteral = module.require('../literals/UndefinedLiteral').UndefinedLiteral;
 
-fn ConditionalExpression(test, consequent, alternate) 
+fn ConditionalExpression(test, consequent, alternate)
   extends Node {
-  
+
   this.type = 'ConditionalExpression';
-  
+
   this.test = test;
   this.test.parent = this;
-  
+
   this.consequent = consequent;
   this.consequent.parent = this;
-  
+
   this.alternate = alternate;
-  this.alternate.parent = this;
+
+  if this.alternate? {
+    this.alternate.parent = this;
+  }
 }
 
 ConditionalExpression.prototype.codegen = () -> {
   if !super.codegen() {
     return;
   }
-    
+
   this.test = this.test.codegen();
   this.consequent = this.consequent.codegen();
+
+  if not this.alternate? {
+    this.alternate = new UndefinedLiteral();
+    this.alternate.parent = this;
+  }
+
   this.alternate = this.alternate.codegen();
-  
+
   return this;
 };
 

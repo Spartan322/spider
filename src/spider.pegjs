@@ -96,13 +96,11 @@
   }
 }
 
-Start
-  = __ program:Program __ { return program; }
+Start = __ program:Program __ { return program; }
 
 /* ----- A.1 Lexical Grammar ----- */
 
-SourceCharacter
-  = .
+SourceCharacter = .
 
 WhiteSpace "whitespace"
   = "\t"
@@ -122,7 +120,7 @@ LineTerminatorSequence "end of line"
   / "\r"
   / "\u2028"
   / "\u2029"
-  
+
 DecDigit = [0-9]
 NonZeroDigit = [1-9]
 HexDigit = [0-9a-f]i
@@ -167,7 +165,7 @@ IdentifierPart
   / UnicodeConnectorPunctuation
   / "\u200C"
   / "\u200D"
-  
+
 // Operator Definitions
 
 AssignmentOperator
@@ -183,19 +181,20 @@ AssignmentOperator
   / "&="
   / "^="
   / "|="
-  
+  / "?="
+
 LogicalOROperator
   = "||"
   / OrToken { return "||"; }
-  
+
 LogicalANDOperator
   = "&&"
   / AndToken { return "&&"; }
-  
+
 EqualityOperator
   = "=="
   / "!="
-  
+
 BitwiseOROperator
   = $("|" ![|=])
 
@@ -204,7 +203,7 @@ BitwiseXOROperator
 
 BitwiseANDOperator
   = $("&" ![&=])
-  
+
 RelationalOperator
   = "<="
   / ">="
@@ -220,7 +219,7 @@ ShiftOperator
 AdditiveOperator
   = $("+" ![+=])
   / $("-" ![-=])
-  
+
 MultiplicativeOperator
   = $("*" ![*=])
   / $("/" !"=")
@@ -259,7 +258,7 @@ FunctionExpressionOperator
 RangeOperator
   = ".." !"." { return ".."; }
   / "..."
-  
+
 // Pattern Definitions
 
 ArrayPattern
@@ -297,8 +296,8 @@ PatternElement
   / ArrayPattern
 
 ObjectPattern
-  = "{" __ "}" { 
-       return  new ast.ObjectPattern([]); 
+  = "{" __ "}" {
+       return  new ast.ObjectPattern([]);
      }
   / "{" __ properties:PatternPropertyNameAndValueList __ "}" {
        return insertLocationData(new ast.ObjectPattern(properties), text(), location());
@@ -306,7 +305,7 @@ ObjectPattern
   / "{" __ properties:PatternPropertyNameAndValueList __ "," __ "}" {
        return insertLocationData(new ast.ObjectPattern(properties), text(), location());
      }
-     
+
 PatternPropertyNameAndValueList
   = first:PatternPropertyAssignment rest:(__ "," __ PatternPropertyAssignment)* {
       return buildList(first, rest, 3);
@@ -321,7 +320,7 @@ PatternPropertyAssignment
     }
   / key:IdentifierName {
     return insertLocationData(new ast.Property(key, key, true, false), text(), location());
-  }    
+  }
 
 Pattern
   = ObjectPattern
@@ -440,12 +439,12 @@ HexIntegerLiteral
   = "0x"i digits:$HexDigit+ {
     return insertLocationData(new ast.NumberLiteral(text(), 16), text(), location());
   }
-  
+
 OctalIntegerLiteral
   = "0o"i digits:$OctDigit+ {
     return insertLocationData(new ast.NumberLiteral(text(), 8), text(), location());
   }
-  
+
 BinaryIntegerLiteral
   = "0b"i digits:$BinDigit+ {
     return insertLocationData(new ast.NumberLiteral(text(), 2), text(), location());
@@ -583,12 +582,12 @@ ElementList
       }
     )*
     { return Array.prototype.concat.apply(first, rest); }
-    
+
 // Object Definitions
 
 ObjectLiteral
-  = "{" __ "}" { 
-       return  new ast.ObjectExpression([]); 
+  = "{" __ "}" {
+       return  new ast.ObjectExpression([]);
      }
   / "{" __ properties:PropertyNameAndValueList __ "}" {
        return insertLocationData(new ast.ObjectExpression(properties), text(), location());
@@ -596,7 +595,7 @@ ObjectLiteral
   / "{" __ properties:PropertyNameAndValueList __ "," __ "}" {
        return insertLocationData(new ast.ObjectExpression(properties), text(), location());
      }
-     
+
 PropertyNameAndValueList
   = first:PropertyAssignment rest:(__ "," __ PropertyAssignment)* {
       return buildList(first, rest, 3);
@@ -606,17 +605,17 @@ PropertyAssignment
   = key:PropertyName __ ":" __ value:AssignmentExpression {
       return insertLocationData(new ast.Property(key, value, false, false), text(), location());
     }
-  / key:PropertyName __ 
+  / key:PropertyName __
     "(" __ params:(FormalParameterList __)? ")"
     __ body:Block __
     {
       return insertLocationData(new ast.Property(key, new ast.FunctionExpression(
-        null, 
+        null,
         optionalList(extractOptional(params, 0)),
         body,
         null
       ), false, true), text(), location());
-    }    
+    }
   / key:IdentifierName {
     return insertLocationData(new ast.Property(key, key, true, false), text(), location());
   }
@@ -689,12 +688,12 @@ Program
   = body:StatementList? {
       return insertLocationData(new ast.Program(optionalList(body)), text(), location());
     }
-    
+
 Block
   = "{" __ body:(StatementList __)? "}" {
       return insertLocationData(new ast.BlockStatement(optionalList(extractOptional(body, 0))), text(), location());
     }
-    
+
 InheritsFrom
   = "extends" __ call:CallExpression __ {
       return call;
@@ -1047,7 +1046,7 @@ UseIdentifier
   / ":" id:Identifier {
     return id.asPredefinedCollection();
   }
-  
+
 // Expression Definitions
 
 ExpressionStatement
@@ -1412,7 +1411,7 @@ OptionalRange
   = from:Expression? __ operator:RangeOperator __ to:Expression? {
     return insertLocationData(new ast.Range(from, operator, to), text(), location());
   }
-  
+
 /*JavascriptLiteralExpression
   = "@js" __ "{" __? jsLiteral:(SourceCharacter __)* "}" {
     return insertLocationData(new ast.JavascriptLiteralExpression(jsLiteral), text(), location());

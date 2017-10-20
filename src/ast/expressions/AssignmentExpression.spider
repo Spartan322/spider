@@ -1,6 +1,8 @@
 use :node;
 
-var Node = module.require('../Node').Node;
+var Node = module.require('../Node').Node,
+    Identifier = module.require('../literals/Identifier').Identifier,
+    NullCoalescingExpression = module.require('./NullCoalescingExpression').NullCoalescingExpression;
 
 fn AssignmentExpression(left, operator, right)
   extends Node {
@@ -13,7 +15,7 @@ fn AssignmentExpression(left, operator, right)
 
   this.right = right;
   this.right.parent = this;
-  
+
 }
 
 AssignmentExpression.prototype.codegen = () -> {
@@ -21,8 +23,15 @@ AssignmentExpression.prototype.codegen = () -> {
     return;
   }
 
+  if this.operator == '?=' {
+    if this.left.type != 'Identifier' { throw "left must be Identifier"; }
+    this.right = new NullCoalescingExpression(new Identifier(this.left.name), this.right);
+    this.right.parent = this;
+    this.operator = '=';
+  }
+
   this.left = this.left.codegen();
-  this.right = this.right.codegen();
+  this.right = this.right.codegen(true);
 
   return this;
 };

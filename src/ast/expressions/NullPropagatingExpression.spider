@@ -4,13 +4,13 @@ var Node = module.require('../Node').Node;
 
 fn NullPropagatingExpression(left, right)
   extends Node {
-  
+
   this.type = 'NullPropagatingExpression';
   this.computed = false;
-  
+
   this.object = left;
   this.object.parent = this;
-  
+
   this.property = right;
   this.property.parent = this;
 }
@@ -19,13 +19,13 @@ NullPropagatingExpression.prototype.codegen = () -> {
   if !super.codegen() {
     return;
   }
-  
+
   var context = this.getContext();
   var childType = this.object.type;
-  
+
   this.object = this.object.codegen();
   this.property = this.property.codegen(false);
-  
+
   // If the left expression is a function call (e.g: a()?.b)
   // then store its value in a separate variable to avoid
   // calling the function twice.
@@ -38,10 +38,10 @@ NullPropagatingExpression.prototype.codegen = () -> {
         "object": this.object,
         "property": this.property,
         "computed": false
-      },      
+      },
     };
-    
-    context.node.body.splice(context.position + 
+
+    context.node.body.splice(context.position +
       (NullPropagatingExpression.nullPropagatingIndex - 1), 0, {
       "type": "VariableDeclaration",
       "declarations": [
@@ -54,12 +54,12 @@ NullPropagatingExpression.prototype.codegen = () -> {
       "kind": "let",
       "codeGenerated": true
     });
-    
+
     this.object = id;
   }
-  
+
   var condition;
-  
+
   // If this node is the last NullPropagatingExpression in
   // the tree, then just create a simple object !== null condition
   if childType != 'NullPropagatingExpression' {
@@ -107,12 +107,12 @@ NullPropagatingExpression.prototype.codegen = () -> {
       "__first_object": this.object.__first_object
     };
   }
-  
+
   // Return the condition if this isn't the first NullPropagatingExpression
   if this.parent?.type == 'NullPropagatingExpression' {
     return condition;
   }
-    
+
   // Add typeof object !== undefined check
   condition = {
     "type": 'LogicalExpression',
@@ -139,7 +139,7 @@ NullPropagatingExpression.prototype.codegen = () -> {
     "test": condition,
     "consequent": {
       "type": "MemberExpression",
-      "object": this.object if this.object.type == 'Identifier' || !this.object.__member_expression 
+      "object": this.object if this.object.type == 'Identifier' || !this.object.__member_expression
         else this.object.__member_expression,
       "property": this.property,
       "computed": false
@@ -155,7 +155,7 @@ NullPropagatingExpression.prototype.codegen = () -> {
       "prefix": true
     },
     "__null_propagating": true
-  };  
+  };
 
   return condition;
 };
@@ -163,14 +163,14 @@ NullPropagatingExpression.prototype.codegen = () -> {
 NullPropagatingExpression.prototype.hasCallExpression = () -> true;
 
 NullPropagatingExpression.getNextObjectName = () -> {
-  if !this.nullPropagatingIndex? { 
+  if !this.nullPropagatingIndex? {
     this.nullPropagatingIndex = 0;
     this.definedObjectNames = [];
   }
 
   var name = "nullPropagating" + this.nullPropagatingIndex++;
   this.definedObjectNames.push(name);
-  
+
   return name;
 };
 
