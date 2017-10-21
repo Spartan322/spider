@@ -4,33 +4,33 @@ fn Node() {
   var self = this;
   self.codeGenerated = false;
   self.definedIdentifiers = [];
-  
+
   ::Object.defineProperty(self, 'parent', {
     value: null,
     writable: true,
     configurable: true,
     enumerable: false
   });
-  
+
   self.getContext = () -> {
     if self.type == 'Program' ||
        self.type == 'BlockStatement' {
-      return { 
+      return {
         node: self,
         position: -1
       };
     }
-    
+
     if !self.parent? {
       return null;
     }
-    
+
     var context = self.parent.getContext();
-    
-    if !context? { 
+
+    if !context? {
       return null;
     }
-    
+
     if context.position == -1 {
       return {
         node: context.node,
@@ -40,57 +40,87 @@ fn Node() {
       return context;
     }
   };
-  
+
   self.defineIdentifier = (identifier) -> {
     self.definedIdentifiers.push(identifier);
   };
-  
+
   self.isIdentifierDefined = (name) -> {
     var defined = false;
-    
+
     for identifier in self.definedIdentifiers {
       if identifier.name == name {
         defined = true;
       }
     }
-    
+
     return defined || (self.parent && self.parent.isIdentifierDefined(name));
   };
-  
+
   self.getDefinedIdentifier = (name) -> {
     var id;
-    
+
     for identifier in self.definedIdentifiers {
       if identifier.name == name {
         id = identifier;
       }
     }
-    
+
     return id ?? (self.parent.getDefinedIdentifier(name) if self.parent else null);
   };
-  
+
   self.blockWrap = () -> {
     if self.type == 'BlockStatement' {
       return self;
     }
-    
+
     var myParent = self.parent;
     var blockStatement = module.require('./statements/BlockStatement');
-    
+
     var block = new blockStatement.BlockStatement([self]);
     block.parent = myParent;
-    
+
     return block;
-  };  
+  };
+
+  this.getGlobalBlockScope = () => {
+    if not this.parent? { return this; }
+    return this.parent.getGlobalBlockScope();
+  }
+
+  this.clone = () => {
+    use Object;
+    var newObj = Object.create(Object.getPrototypeOf(this));
+    for prop, val of this {
+      use newObj;
+      newObj[prop] = val;
+    }
+    newObj.codegen = this.codegen;
+    newObj.hasCallExpression = this.hasCallExpression;
+    return newObj;
+  }
 }
 
 Node.prototype.codegen = () -> {
   if this.codeGenerated {
     return false;
   }
-  
+
   this.codeGenerated = true;
   return true;
+};
+
+Node.prototype.getNextVariableName = (baseIdent) -> {
+  var construct = Object.getPrototypeOf(this).constructor;
+  if not construct[baseIdent+'Index']? {
+    construct[baseIdent+'Index'] = 0;
+  }
+
+  construct.resetVariableName = () -> construct[baseIdent+'Index'] = 0;
+
+  var result = baseIdent + construct[baseIdent+'Index'];
+  while this.isIdentifierDefined(result = baseIdent + construct[baseIdent+'Index']++) {}
+  return result;
 };
 
 Node.setErrorManager = (errorManager) -> {

@@ -1,0 +1,65 @@
+use :node;
+
+var Node = module.require('../Node').Node,
+    fs = module.require('fs');
+
+fn EnumStatement(input)
+    extends Node {
+
+    this.input = input;
+}
+
+EnumStatement.prototype.codegen = () -> {
+    if not super.codegen() {
+        return;
+    }
+
+    if not EnumStatement.protoDefined? || not EnumStatement.protoDefined {
+        var text =
+"""
+fn enum(input) extends null {
+    use Object;
+    var properties = [],
+        values = [],
+        enumList = input.list,
+        prototype = Object.freeze(input.proto);
+
+    for obj, ordinal of enumList {
+        var name = value.name, value = obj.value;
+        this[name] = Object.create(prototype);
+        this[name].ordinal = ordinal;
+        this[name].name = name;
+        this[name].value = value
+        this[name].toString = () -> name;
+        this[name] = Object.freeze(this[name]);
+        properties <- name;
+        values <- value;
+        this[ordinal++] = this[name];
+    }
+
+    this.keys = () => properties.slice();
+    this.values = () => values.slice();
+    this.ordinals = () => Array.prototype.slice.call(this);
+
+    Object.defineProperties(this, {
+        'length': {
+            value: properties.length
+        },
+        'name': {
+            value: input.name
+        }
+    });
+
+    this = Object.freeze(this);
+}
+::Object.freeze(enum);
+""";
+
+        /*TODO add insertion of enum to the global scope in spider and create a new enum*/
+
+        EnumStatement.protoDefined = true;
+    }
+
+
+
+}

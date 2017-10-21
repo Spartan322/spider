@@ -37,6 +37,100 @@ Parameter.prototype.hasCallExpression = () -> {
   return false;
 };
 
+Parameter.generateFunctionExtend = (func, nextVar = "functionExpression0") -> {
+  if not func.inheritsFrom? { return; }
+
+  if func.inheritsFrom.type == 'UndefinedLiteral' {
+    Node.getErrorManager().error({
+      type: "UndefinedExtend",
+      message: "cannot extend undefined as a prototype",
+      loc: func.loc
+    });
+  } else if func.inheritsFrom.type != 'CallExpression' and func.inheritsFrom.type != 'NullLiteral' {
+    func.inheritsFrom = new CallExpression(func.inheritsFrom, []);
+    func.inheritsFrom.parent = func;
+  }
+  if func.inheritsFrom.type != 'NullLiteral' {
+    func.body.body.splice(0, 0, {
+      "type": "ExpressionStatement",
+      "expression": {
+        "type": "CallExpression",
+        "callee": {
+          "type": "MemberExpression",
+          "computed": false,
+          "object": func.inheritsFrom.callee,
+          "property": {
+            "type": "Identifier",
+            "name": "call"
+          }
+        },
+        "arguments": [
+          { "type": "ThisExpression" }
+        ].concat(func.inheritsFrom.arguments)
+      }
+    });
+  }
+
+  if func.type == 'FunctionDeclarationStatement' { this.inheritsFrom = this.inheritsFrom.codegen(); }
+
+  var context = func.getContext(),
+      id = func.id;
+
+  if func.type == 'FunctionExpression' {
+    id = {"type": "Identifier", "name": nextVar};
+    context.node.body.splice(context.position, 0, {
+      "type": "VariableDeclaration",
+      "declarations": [
+        {
+          "type": "VariableDeclarator",
+          "id": id,
+          "init": func
+        }
+      ],
+      "kind": "let",
+      "codeGenerated": true
+    });
+  }
+
+  context.node.body.splice(context.position + 1, 0, {
+    "type": "ExpressionStatement",
+    "codeGenerated": "true",
+    "expression": {
+      "type": "AssignmentExpression",
+      "operator": "=",
+      "left": {
+        "type": "MemberExpression",
+        "computed": false,
+        "object": id,
+        "property": {
+          "type": "Identifier",
+          "name": "prototype"
+        }
+      },
+      "right": {
+        "type": "CallExpression",
+        "callee": {
+          "type": "MemberExpression",
+          "computed": false,
+          "object": {
+            "type": "Identifier",
+            "name": "Object"
+          },
+          "property": {
+            "type": "Identifier",
+            "name": "create"
+          }
+        },
+        "arguments": [
+          func.inheritsFrom.callee
+        ]
+      }
+    }
+  });
+
+  return id;
+}
+
 Parameter.generateFunctionBody = (func, params, body, defaults) -> {
   var splatPosition = -1;
 

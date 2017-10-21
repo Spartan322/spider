@@ -54,7 +54,7 @@ exports.compile = fn (options) {
       options.useStrict ?? true,
       options.iifi ?? true);
   }
-  
+
   var generatorOpts = {
     sourceMaps: options.generateSourceMap,
     sourceMapTarget: options.fileName if options.generateSourceMap else null,
@@ -64,7 +64,7 @@ exports.compile = fn (options) {
 
   if options.target == "ES5" {
     console.log(result.sourceMap);
-    
+
     var babelResult = babel.transformFromAst(tree, options.text,
     {
       filename: generatorOpts.filename,
@@ -76,7 +76,7 @@ exports.compile = fn (options) {
     if options.generateSourceMap { result.sourceMap = babelResult.map; }
   } else if options.target == "ES6" {
     var output = generate(tree, generatorOpts, options.text);
-    
+
     if options.generateSourceMap {
       result.result = output.code + "\n\n//# sourceMappingURL=" + mapFileName;
       result.sourceMap = output.map;

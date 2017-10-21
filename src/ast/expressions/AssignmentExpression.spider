@@ -24,14 +24,13 @@ AssignmentExpression.prototype.codegen = () -> {
   }
 
   if this.operator == '?=' {
-    if this.left.type != 'Identifier' { throw "left must be Identifier"; }
-    this.right = new NullCoalescingExpression(new Identifier(this.left.name), this.right);
+    this.right = new NullCoalescingExpression(this.left.clone(), this.right);
     this.right.parent = this;
     this.operator = '=';
   }
 
   this.left = this.left.codegen();
-  this.right = this.right.codegen(true);
+  this.right = this.right.codegen(false) if this.right.type == 'NullCoalescingExpression' else this.right.codegen();
 
   return this;
 };

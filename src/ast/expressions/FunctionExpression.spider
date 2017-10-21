@@ -3,43 +3,43 @@ use :node;
 var Node = module.require('../Node').Node,
     Parameter = module.require('../Parameter').Parameter,
     CallExpression = module.require('../expressions/CallExpression').CallExpression;
-    
-fn FunctionExpression (id, params, body, inheritsFrom, operator) 
+
+fn FunctionExpression (id, params, body, inheritsFrom, operator)
   extends Node {
- 
+
   if operator == "=>" {
     this.type = "ArrowFunctionExpression";
   } else {
-    this.type = 'FunctionExpression'; 
+    this.type = 'FunctionExpression';
   }
-  
+
   this.defaults = [];
   this.rest = null;
   this.generator = false;
-  this.expression = false;  
+  this.expression = false;
   this.operator = operator;
-  
+
   this.id = id;
-  
+
   if this.id? {
     this.id.parent = this;
   }
-  
+
   this.body = body;
   this.params = params;
-  
+
   body.parent = this;
-  
+
   for param in params {
     param.parent = this;
   }
-  
+
   this.inheritsFrom = inheritsFrom;
-  
+
   if this.inheritsFrom? {
     this.inheritsFrom.parent = this;
   }
-  
+
   if this.body.type != 'BlockStatement' {
     this.autoBlock = true;
     this.body = {
@@ -51,10 +51,10 @@ fn FunctionExpression (id, params, body, inheritsFrom, operator)
         }
       ]
     };
-    
+
     var self = this;
     this.getContext = () -> {
-      return { 
+      return {
         node: self.body,
         position: -1
       };
@@ -66,11 +66,11 @@ FunctionExpression.prototype.codegen = () -> {
   if !super.codegen() {
     return;
   }
-  
+
   if this.id? {
     this.id = this.id.codegen(false);
   }
-  
+
   Parameter.generateFunctionBody(this, this.params, this.body, this.defaults);
 
   if this.autoBlock {
@@ -78,106 +78,14 @@ FunctionExpression.prototype.codegen = () -> {
   } else {
     this.body = this.body.codegen();
   }
-  
-  if this.inheritsFrom? {
-    if this.inheritsFrom.type != 'CallExpression' {
-      this.inheritsFrom = new CallExpression(this.inheritsFrom, []);
-      this.inheritsFrom.parent = this;
-    }
-    
-    var context = this.getContext();
-    
-    this.body.body.splice(0, 0, {
-      "type": "ExpressionStatement",
-      "expression": {
-        "type": "CallExpression",
-        "callee": {
-          "type": "MemberExpression",
-          "computed": false,
-          "object": this.inheritsFrom.callee,
-          "property": {
-            "type": "Identifier",
-            "name": "call"
-          }
-        },
-        "arguments": [
-          { "type": "ThisExpression" }
-        ].concat(this.inheritsFrom.arguments)
-      }
-    });
-    
-    var id = {
-      "type": "Identifier",
-      "name": FunctionExpression.getNextVariableName()
-    };
-    
-    context.node.body.splice(context.position, 0, {
-      "type": "VariableDeclaration",
-      "declarations": [
-        {
-          "type": "VariableDeclarator",
-          "id": id,
-          "init": this
-        }
-      ],
-      "kind": "let",
-      "codeGenerated": true
-    });
 
-    context.node.body.splice(context.position + 1, 0, {
-      "type": "ExpressionStatement",
-      "codeGenerated": "true",
-      "expression": {
-        "type": "AssignmentExpression",
-        "operator": "=",
-        "left": {
-          "type": "MemberExpression",
-          "computed": false,
-          "object": id,
-          "property": {
-            "type": "Identifier",
-            "name": "prototype"
-          }
-        },
-        "right": {
-          "type": "CallExpression",
-          "callee": {
-            "type": "MemberExpression",
-            "computed": false,
-            "object": {
-              "type": "Identifier",
-              "name": "Object"
-            },
-            "property": {
-              "type": "Identifier",
-              "name": "create"
-            }
-          },
-          "arguments": [
-            this.inheritsFrom.callee
-          ]
-        }
-      }
-    });
-    
-    return id;
+  if this.inheritsFrom? {
+    return Parameter.generateFunctionExtend(this, this.getNextVariableName("functionExpression"));
   }
 
   return this;
 };
 
 FunctionExpression.prototype.hasCallExpression = () -> true;
-
-FunctionExpression.getNextVariableName = () -> {
-  if !this.functionExpressionIndex? { 
-    this.functionExpressionIndex = 0; 
-  }
-
-  return "functionExpression" + this.functionExpressionIndex++;
-};
-
-FunctionExpression.resetVariableNames = () -> {
-  this.functionExpressionIndex = 0;
-};
 
 exports.FunctionExpression = FunctionExpression;

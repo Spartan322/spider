@@ -4,7 +4,7 @@ var Node = module.require('../Node').Node;
 
 fn NullLiteral()
   extends Node {
-  
+
   this.type = 'NullLiteral';
 }
 
@@ -12,7 +12,7 @@ NullLiteral.prototype.codegen = () -> {
   if !super.codegen() {
     return;
   }
-  
+
   return this;
 };
 

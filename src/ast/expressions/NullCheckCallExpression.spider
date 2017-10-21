@@ -2,17 +2,17 @@ use :node;
 
 var Node = module.require('../Node').Node,
     CallExpression = module.require('./CallExpression').CallExpression;
-    
+
 fn NullCheckCallExpression(callee, args)
   extends Node {
-  
+
   this.type = 'NullCheckCallExpression';
-  
+
   this.callee = callee;
   this.callee.parent = this;
-  
+
   this.args = args;
-  
+
   for arg in args {
     arg.parent = this;
   }
@@ -22,35 +22,35 @@ NullCheckCallExpression.prototype.codegen = () -> {
   if !super.codegen() {
     return;
   }
-  
+
   var calleeType = this.callee.type;
-  
+
   this.callee = this.callee.codegen();
-  
+
   var args = this.args;
   for arg, i in args {
-    var isSplat = args[i].type == "SplatExpression";    
+    var isSplat = args[i].type == "SplatExpression";
     args[i] = arg.codegen();
     args[i].codeGenerated = true;
-    
+
     if isSplat {
       args[i].__splat = true;
     }
   }
-  
+
   // If the callee has a function call (e.g: a().b)
   // then store its value in a separate variable to avoid
   // calling the function twice.
   if this.callee.hasCallExpression?() {
     var context = this.getContext();
-    
+
     var id = {
       "type": "Identifier",
-      "name": NullCheckCallExpression.getNextVariableName(),
+      "name": this.getNextVariableName("nullCheck"),
       "codeGenerated": true
     };
-    
-    context.node.body.splice(context.position + 
+
+    context.node.body.splice(context.position +
       (NullCheckCallExpression.nullCheckIndex - 2), 0, {
       "type": "VariableDeclaration",
       "declarations": [
@@ -63,10 +63,10 @@ NullCheckCallExpression.prototype.codegen = () -> {
       "kind": "let",
       "codeGenerated": true
     });
-    
+
     this.callee = id;
   }
-  
+
   // Create a basic typeof callee !== "function" check
   var test = {
     "type": "BinaryExpression",
@@ -83,26 +83,26 @@ NullCheckCallExpression.prototype.codegen = () -> {
       "extra": { "raw": "\"function\"" }
     }
   };
-  
+
   var argument = test.left.argument;
-  
+
   // If we are null propagating (?.), then make sure to
-  // add the null propagating condition 
+  // add the null propagating condition
   if calleeType == 'NullPropagatingExpression' {
     argument = argument.consequent;
     test.left.argument = argument;
-    
+
     test = {
       "type": "LogicalExpression",
       "operator": "&&",
       "left": this.callee.test,
       "right": test
     };
-  } 
-  
+  }
+
   argument.codeGenerated = true;
   var consequent = new CallExpression(argument, args).codegen();
-    
+
   if this.parent.type == 'ExpressionStatement' {
     this.parent.type = 'IfStatement';
     this.parent.test = test;
@@ -135,17 +135,5 @@ NullCheckCallExpression.prototype.codegen = () -> {
 };
 
 NullCheckCallExpression.prototype.hasCallExpression = () -> true;
-
-NullCheckCallExpression.getNextVariableName = () -> {
-  if !this.nullCheckIndex? { 
-    this.nullCheckIndex = 0;
-  }
-  
-  return "nullCheck" + this.nullCheckIndex++;
-};
-
-NullCheckCallExpression.resetVariableNames = () -> {
-  this.nullCheckIndex = 0;
-};
 
 exports.NullCheckCallExpression = NullCheckCallExpression;

@@ -4,12 +4,12 @@ var Node = module.require('../Node').Node;
 
 fn InExpression(left, right)
   extends Node {
-  
+
   this.type = 'InExpression';
-  
+
   this.left = left;
   this.left.parent = this;
-  
+
   this.right = right;
   this.right.parent = this;
 }
@@ -18,20 +18,20 @@ InExpression.prototype.codegen = () -> {
   if !super.codegen() {
     return;
   }
-  
+
   this.left = this.left.codegen();
   this.right = this.right.codegen();
-  
+
   if this.right.hasCallExpression?() {
     var context = this.getContext();
-    
+
     var id = {
       "type": "Identifier",
-      "name": InExpression.getNextVariableName(),
+      "name": this.getNextVariableName("inExpression"),
       "codeGenerated": true
     };
-    
-    context.node.body.splice(context.position + 
+
+    context.node.body.splice(context.position +
       (InExpression.inExpressionIndex - 2), 0, {
       "type": "VariableDeclaration",
       "declarations": [
@@ -44,10 +44,10 @@ InExpression.prototype.codegen = () -> {
       "kind": "let",
       "codeGenerated": true
     });
-    
+
     this.right = id;
   }
-  
+
   this.type = "ConditionalExpression";
   this.test = {
     "type": "BinaryExpression",
@@ -58,7 +58,7 @@ InExpression.prototype.codegen = () -> {
       "name": "Array"
     }
   };
-  
+
   this.consequent = {
     "type": "BinaryExpression",
     "operator": "!==",
@@ -86,29 +86,17 @@ InExpression.prototype.codegen = () -> {
       "prefix": true
     }
   };
-  
+
   this.alternate = {
     "type": "BinaryExpression",
     "operator": "in",
     "left": this.left,
     "right": this.right
   };
-    
+
   return this;
 };
 
 InExpression.prototype.hasCallExpression = () -> true;
-
-InExpression.getNextVariableName = () -> {
-  if !this.inExpressionIndex? { 
-    this.inExpressionIndex = 0;
-  }
-  
-  return "inExpression" + this.inExpressionIndex++;
-};
-
-InExpression.resetVariableNames = () -> {
-  this.inExpressionIndex = 0;
-};
 
 exports.InExpression = InExpression;

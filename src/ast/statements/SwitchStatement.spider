@@ -4,14 +4,14 @@ var Node = module.require('../Node').Node;
 
 fn SwitchStatement(discriminant, cases)
   extends Node {
-  
+
   this.type = 'SwitchStatement';
-  
+
   this.discriminant = discriminant;
   this.discriminant.parent = this;
-  
+
   this.cases = cases;
-  
+
   for caseClause in this.cases {
     caseClause.parent = this;
   }
@@ -21,19 +21,19 @@ SwitchStatement.prototype.codegen = () -> {
   if !super.codegen() {
     return;
   }
-  
+
   var context = this.getContext();
   var firstCase, currentCase, defaultCase;
   var fallthroughPosition = 1;
-  
+
   this.discriminant = this.discriminant.codegen();
-  
+
   if this.discriminant.hasCallExpression() {
     var id = {
       "type": "Identifier",
-      "name": SwitchStatement.getNextVariableName()
+      "name": this.getNextVariableName("switchStatement")
     };
-    
+
     context.node.body.splice(context.position, 0, {
       "type": "VariableDeclaration",
       "codeGenerated": true,
@@ -44,18 +44,18 @@ SwitchStatement.prototype.codegen = () -> {
       }],
       "kind": "let"
     });
-    
+
     this.discriminant = id;
   }
-  
+
   var hasFallthrough = false;
-  
+
   for caseClause in this.cases {
     if (!caseClause.tests) {
       defaultCase = caseClause;
       break;
     }
-    
+
     if !firstCase? {
       firstCase = caseClause.codegen();
       currentCase = firstCase;
@@ -64,13 +64,13 @@ SwitchStatement.prototype.codegen = () -> {
         hasFallthrough = true;
         currentCase = caseClause.codegen(this.branchFallthrough);
         context.node.body.splice(context.position + fallthroughPosition++, 0, currentCase);
-      } else {        
+      } else {
         currentCase.alternate = caseClause.codegen(this.fallthroughId?);
         currentCase = currentCase.alternate;
-      }      
+      }
     }
   }
-  
+
   if hasFallthrough {
     for caseClause in this.cases {
       if !caseClause.fallthrough and caseClause != defaultCase {
@@ -90,7 +90,7 @@ SwitchStatement.prototype.codegen = () -> {
       }
     }
   }
-  
+
   if defaultCase? {
     if !firstCase? {
       Node.getErrorManager().error({
@@ -108,13 +108,13 @@ SwitchStatement.prototype.codegen = () -> {
           for statement in defaultCase.body {
             context.node.body.splice(context.position + fallthroughPosition++, 0, statement);
           }
-        }        
+        }
       } else {
         currentCase.alternate = defaultCase.codegen(this.fallthroughId?);
       }
     }
   }
-  
+
   if this.fallthroughId? {
     context.node.body.splice(context.position, 0, {
       "type": "VariableDeclaration",
@@ -132,7 +132,7 @@ SwitchStatement.prototype.codegen = () -> {
       "kind": "let"
     });
   }
-  
+
   if !firstCase? {
     this.type = "ExpressionStatement";
     this.expression = this.discriminant;
@@ -142,20 +142,8 @@ SwitchStatement.prototype.codegen = () -> {
     this.consequent = firstCase.consequent;
     this.alternate = firstCase.alternate;
   }
-  
+
   return this;
-};
-
-SwitchStatement.getNextVariableName = () -> {
-  if !this.switchStatementIndex? { 
-    this.switchStatementIndex = 0;
-  }
-  
-  return "switchStatement" + this.switchStatementIndex++;
-};
-
-SwitchStatement.resetVariableNames = () -> {
-  this.switchStatementIndex = 0;
 };
 
 exports.SwitchStatement = SwitchStatement;

@@ -4,20 +4,20 @@ var Node = module.require('../Node').Node;
 
 fn ForInStatement(item, index, array, body)
   extends Node {
-  
+
   this.type = 'ForInStatement';
-  
+
   this.item = item;
   this.item.parent = this;
-  
+
   this.index = index;
   if this.index? {
     this.index.parent = this;
   }
-  
+
   this.array = array;
   this.array.parent = this;
-  
+
   this.body = body;
   this.body.parent = this;
 }
@@ -26,13 +26,13 @@ ForInStatement.prototype.codegen = () -> {
   if !super.codegen() {
     return;
   }
-  
+
   this.item = this.item.codegen(false);
-  
+
   if this.index? {
     var context = this.getContext();
     this.index = this.index.codegen(false);
-    
+
     context.node.body.splice(context.position, 0, {
       "type": "VariableDeclaration",
       "declarations": [{
@@ -50,16 +50,16 @@ ForInStatement.prototype.codegen = () -> {
   if !this.array.codeGenerated {
     this.array = this.array.codegen();
   }
- 
+
   this.body = this.body.blockWrap();
   this.body.defineIdentifier(this.item);
-  
+
   if this.index? {
     this.body.defineIdentifier(this.index);
   }
-  
+
   this.body = this.body.codegen();
-  
+
   if this.index? {
     this.body.body.push({
       "type": "ExpressionStatement",
@@ -72,7 +72,7 @@ ForInStatement.prototype.codegen = () -> {
       }
     });
   }
-  
+
   this.type = "ForOfStatement";
   this.right = this.array;
   this.left = {
@@ -85,7 +85,7 @@ ForInStatement.prototype.codegen = () -> {
     "kind": "let"
   };
   this.each = false;
-    
+
   return this;
 };
 

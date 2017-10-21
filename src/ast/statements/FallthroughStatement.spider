@@ -4,7 +4,7 @@ var Node = module.require('../Node').Node;
 
 fn FallthroughStatement()
   extends Node {
-  
+
   this.type = 'FallthroughStatement';
 }
 
@@ -12,15 +12,15 @@ FallthroughStatement.prototype.codegen = () -> {
   if !super.codegen() {
     return;
   }
-  
+
   var parent = this.parent;
   var iterations = 0;
-  
+
   while parent? and !parent.switchCase {
     parent = parent.parent;
     iterations++;
   }
-  
+
   if parent? {
     parent.fallthrough = true;
   } else {
@@ -30,18 +30,18 @@ FallthroughStatement.prototype.codegen = () -> {
       loc: this.loc
     });
   }
-  
+
   var switchStatement = parent.parent;
-  
+
   if !switchStatement.fallthroughId {
     switchStatement.fallthroughId = {
       "type": "Identifier",
-      "name": FallthroughStatement.getNextVariableName()
+      "name": this.getNextVariableName("fallthrough")
     };
   }
-  
+
   switchStatement.branchFallthrough = true;
-  
+
   parent.body.body = [{
     "type": "ExpressionStatement",
     "codeGenerated": true,
@@ -55,7 +55,7 @@ FallthroughStatement.prototype.codegen = () -> {
       }
     }
   }].concat(parent.body.body);
-    
+
   this.type = "ExpressionStatement";
   this.expression = {
     "type": "AssignmentExpression",
@@ -66,20 +66,8 @@ FallthroughStatement.prototype.codegen = () -> {
       "value": 1
     }
   };
-  
+
   return this;
-};
-
-FallthroughStatement.getNextVariableName = () -> {
-  if (!this.fallthroughIndex?) { 
-    this.fallthroughIndex = 0; 
-  }
-
-  return "fallthrough" + this.fallthroughIndex++;
-};
-
-FallthroughStatement.resetVariableNames = () -> {
-  this.fallthroughIndex = 0;
 };
 
 exports.FallthroughStatement = FallthroughStatement;

@@ -2,9 +2,9 @@ use :node;
 
 var Node = module.require('../Node').Node;
 
-fn ExistentialExpression(argument) 
+fn ExistentialExpression(argument)
   extends Node {
-  
+
   this.type = 'ExistentialExpression';
   this.argument = argument;
   this.argument.parent = this;
@@ -14,23 +14,23 @@ ExistentialExpression.prototype.codegen = () -> {
   if !super.codegen() {
     return;
   }
-  
+
   var isArgumentCallExpression = this.argument.hasCallExpression?() ?? false;
-  
+
   this.argument = this.argument.codegen();
-  
+
   // If the argument has a function call (e.g: a().b)
   // then store its value in a separate variable to avoid
   // calling the function twice.
   if isArgumentCallExpression {
     var context = this.getContext();
-    
+
     var id = {
       "type": "Identifier",
-      "name": ExistentialExpression.getNextVariableName()    
+      "name": this.getNextVariableName("existential")
     };
-    
-    context.node.body.splice(context.position + 
+
+    context.node.body.splice(context.position +
       (ExistentialExpression.existentialIndex - 2), 0, {
       "type": "VariableDeclaration",
       "declarations": [
@@ -43,10 +43,10 @@ ExistentialExpression.prototype.codegen = () -> {
       "kind": "let",
       "codeGenerated": true
     });
-    
+
     this.argument = id;
   }
-  
+
   // The generated syntax looks like:
   // argument === null
   var nullCheck = {
@@ -57,7 +57,7 @@ ExistentialExpression.prototype.codegen = () -> {
       "type": "NullLiteral"
     }
   };
-  
+
   // Add undefined check
   this.type = 'LogicalExpression';
   this.operator = '&&';
@@ -73,28 +73,16 @@ ExistentialExpression.prototype.codegen = () -> {
     "right": {
       "type": "StringLiteral",
       "value": "undefined",
-      "extra": { "raw": "'undefined'"} 
+      "extra": { "raw": "'undefined'"}
     }
   };
-  
+
   this.right = nullCheck;
   return this;
 };
 
 ExistentialExpression.prototype.hasCallExpression = () -> {
   return this.argument?.hasCallExpression?() ?? false;
-};
-
-ExistentialExpression.getNextVariableName = () -> {
-  if !this.existentialIndex? { 
-    this.existentialIndex = 0;
-  }
-  
-  return "existential" + this.existentialIndex++;
-};
-
-ExistentialExpression.resetVariableNames = () -> {
-  this.existentialIndex = 0;
 };
 
 exports.ExistentialExpression = ExistentialExpression;

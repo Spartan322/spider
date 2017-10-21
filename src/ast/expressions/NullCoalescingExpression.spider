@@ -14,7 +14,7 @@ fn NullCoalescingExpression(left, right)
   this.right.parent = this;
 }
 
-NullCoalescingExpression.prototype.codegen = (ignoreUndefined = false) -> {
+NullCoalescingExpression.prototype.codegen = (undefinedCheck = true) -> {
   if !super.codegen() {
     return;
   }
@@ -25,7 +25,7 @@ NullCoalescingExpression.prototype.codegen = (ignoreUndefined = false) -> {
   this.right = this.right.codegen();
 
   var context = this.getContext();
-  var addUndefinedCheck = !ignoreUndefined;
+  var addUndefinedCheck = undefinedCheck;
 
   // If the left expression is a function call (e.g: f() ?? 5)
   // then store its value in a separate variable to avoid
@@ -36,7 +36,7 @@ NullCoalescingExpression.prototype.codegen = (ignoreUndefined = false) -> {
 
     var id = {
       "type": "Identifier",
-      "name": this.getNextLeftName()
+      "name": this.getNextVariableName("nullCoalescing")
     };
 
     context.node.body.splice(context.position, 0, {
@@ -132,21 +132,6 @@ NullCoalescingExpression.prototype.codegen = (ignoreUndefined = false) -> {
 NullCoalescingExpression.prototype.hasCallExpression = () -> {
   return this.left?.hasCallExpression() ||
          this.right?.hasCallExpression();
-};
-
-NullCoalescingExpression.prototype.getNextLeftName = () -> {
-  if (!NullCoalescingExpression.nullCoalescingIndex?) {
-    NullCoalescingExpression.nullCoalescingIndex = 0;
-  }
-
-  var result = "nullCoalescing" + NullCoalescingExpression.nullCoalescingIndex;
-
-  while this.isIdentifierDefined(result = "nullCoalescing" + NullCoalescingExpression.nullCoalescingIndex++) {}
-  return result;
-};
-
-NullCoalescingExpression.resetVariableNames = () -> {
-  this.nullCoalescingIndex = 0;
 };
 
 exports.NullCoalescingExpression = NullCoalescingExpression;
