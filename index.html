@@ -28,14 +28,14 @@
         </div>
         <nav class="collapse navbar-collapse bs-navbar-collapse" role="navigation">
           <ul class="nav navbar-nav">
-            <li><a href="http://blog.spiderlang.org">Blog</a></li>
+            <li><a href="http://blog.spiderlang.org">Old Blog</a></li>
           </ul>
           <ul class="nav navbar-nav navbar-right">
             <li class="dropdown">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown">GitHub <b class="caret"></b></a>
               <ul class="dropdown-menu">
-                <li> <a href="https://github.com/alongubkin/spider.git">Repo</a> </li>
-                <li> <a href="https://github.com/alongubkin/spider/issues">Issues</a> </li>
+                <li> <a href="https://github.com/spartan322/spider.git">Repo</a> </li>
+                <li> <a href="https://github.com/spartan322/spider/issues">Issues</a> </li>
               </ul>
             </li>
           </ul>
@@ -50,12 +50,10 @@
     </div>
     <div class="banner">
       <div class="container">
-        Spider v0.1 has been released -
-        <strong>
-          <a href="http://blog.spiderlang.org/post/103752682650/introducing-spider-0-1">See what's new</a>
-        </strong>
+        Spider originally developed by
+          <strong><a href="https://github.com/alongubkin">alongubkin</a></strong> at <strong><a href="https://github.com/alongubkin/spider">alongubkin/spider</a></strong>
       </div>
-    </div>    
+    </div>
     <div class="container docs-container">
       <div class="row">
         <div class="col-xs-3">
@@ -105,6 +103,16 @@
                 </ul>
               </li>
               <li>
+                <a href="#classes">Classes</a>
+                <ul class="nav nav-stacked">
+                  <li><a href="#classes-declaration">Declaration</a></li>
+                  <li><a href="#classes-fields">Fields</a></li>
+                  <li><a href="#classes-static">Static</a></li>
+                  <li><a href="#classes-inheritance">Inheritance</a></li>
+                  <li><a href="#classes-expressions">Expressions</a></li>
+                </ul>
+              </li>
+              <li>
                 <a href="#conditions">Conditions</a>
                 <ul class="nav nav-stacked">
                   <li><a href="#if-statement">If Statement</a></li>
@@ -134,7 +142,7 @@
                   <li><a href="#operators-integer-division">Integer division (#)</a></li>
                   <li><a href="#operators-math-modulo">Math modulo (%%)</a></li>
                   <li><a href="#operators-push-and-get">Push and Get (<-)</a></li>
-                  
+
                 </ul>
               </li>
               <li>
@@ -181,13 +189,13 @@
                 <ul class="nav nav-stacked">
                   <li><a href="#async-nodejs-callbacks">Node.js-style callbacks</a></li>
                 </ul>
-              </li> 
+              </li>
               <li>
                 <a href="#channels">Channels</a>
                 <ul class="nav nav-stacked">
                   <li><a href="#channels-installation">Installation</a></li>
                 </ul>
-              </li> 
+              </li>
 
             </ul>
           </div>
@@ -278,7 +286,7 @@ for timeMachine in ::getTimeMachines() {
                 <li><a href="https://github.com/FullR/gulp-spider-script">gulp-spider-script</a></li>
                 <li><a href="https://github.com/reecer/spider-loader">spider-loader</a> (webpack)</li>
               </ul>
-              
+
               <p><strong>Other</strong></p>
 
               <ul>
@@ -304,48 +312,48 @@ for timeMachine in ::getTimeMachines() {
 
               <p>To execute a script, run:</p>
               <pre><code class="lang-js">spider /path/to/script.spider</code></pre>
-              
+
               <p>To compile a script:</p>
               <pre><code class="lang-js">spider -c /path/to/script.spider</code></pre>
 
               <p>The compiler will generate the output JavaScript file and a source map file for debugging. Note that the original spider file and the source map file aren't necessary for production.</p>
-              
+
               <h3 class="docs-heading">Runtime Dependency<span class="anchor-target" id="using-spider-runtime-dependency"></span>
                 <a href="#using-spider-runtime-dependency" name="using-spider-runtime-dependency" class="anchor glyphicon glyphicon-link"></a>
               </h3>
-              
+
               <p>Spider scripts require the Traceur Runtime in order to run.</p>
-              
+
               <p><strong>Node.js</strong></p>
-              
+
               <p>Install traceur-runtime via npm:</p>
-              
+
               <pre><code class="lang-js">npm install traceur-runtime</code></pre>
-              
+
               <p>Then, simply call it before requiring your compiled Spider script.</p>
-              
+
               <pre><code class="lang-js">require("traceur-runtime");
 require("compiled-spider-code.js");</code></pre>
-              
+
               <p><strong>Browser</strong></p>
-              
+
               <p>Install traceur-runtime via Bower:</p>
-              
+
               <pre><code class="lang-js">bower install traceur-runtime</code></pre>
-              
+
               <p>And add a <code>&lt;script&gt;</code> tag to your html:</p>
-              
+
               <pre><code class="nohighlight" style="color:#fff">&lt;script src=&quot;/bower_components/traceur-runtime/traceur-runtime.js&quot;&gt;&lt;/script&gt;</code></pre>
-              
+
               <h3 class="docs-heading">Compilation Target<span class="anchor-target" id="using-spider-compilation-target"></span>
                 <a href="#using-spider-compilation-target" name="using-spider-compilation-target" class="anchor glyphicon glyphicon-link"></a>
               </h3>
-              
+
               <p>Spider provides 2 targets: <strong>ES5</strong> and <strong>ES6</strong>, where ES5 is the default target.</p>
               <p>To compile to ES6, use the <code>--target</code> option:</p>
-              
+
               <pre><code class="lang-js">spider -c --target=ES6 /path/to/script.spider</code></pre>
-              
+
               <p>Note that ES6 code doesn't depend on the Traceur Runtime.</p>
             </div>
             <div class="docs-section">
@@ -418,7 +426,7 @@ console.log("Hello world!");</code></pre>
               <p><img src="img/undefined-error.png"></p>
               <p>Scoping just works, without any surprises. Spider will protect you against any unintended behaviour.</p>
               <p>Additionally, Spider's <code>var</code> keyword is always compiled to <code>let</code>.</p>
-              
+
               <h3 class="docs-heading">Logical Operators Consistency<span class="anchor-target" id="code-safety-logical-operators-consistency"></span>
                 <a href="#code-safety-logical-operators-consistency" name="code-safety-logical-operators-consistency" class="anchor glyphicon glyphicon-link"></a>
               </h3>
@@ -455,7 +463,7 @@ typeof new Boolean(true); // "boolean"</code></pre>
               <h3 class="docs-heading">String Interpolation<span class="anchor-target" id="strings-string-interpolation"></span>
                 <a href="#strings-string-interpolation" name="strings-string-interpolation" class="anchor glyphicon glyphicon-link"></a>
               </h3>
-              
+
               <p>String interpolation is a way to construct a new string from a mix of constants, variables, literals, and expressions by including their values inside a string literal.</p>
 
               <pre><code class="lang-js">var multiplier = 3;
@@ -466,17 +474,17 @@ var message = "\(multiplier) times 2.5 is \(multiplier * 2.5)";
               <h3 class="docs-heading">Multi-line Strings<span class="anchor-target" id="strings-multi-line-strings"></span>
                 <a href="#strings-multi-line-strings" name="strings-multi-line-strings" class="anchor glyphicon glyphicon-link"></a>
               </h3>
-              
+
               <p>Multiline strings are allowed in Spider. Lines are joined by a single space unless they end with a backslash. Indentation starts from the first quote character column. The tab character is calculated as 4 spaces.</p>
-              
+
               <pre><code class="lang-js">var mobyDick = "Call me Ishmael. Some years ago --
                 never mind how long precisely -- having little
                 or no money in my purse, and nothing particular
                 to interest me on shore, I thought I would sail
                 about a little and see the watery part of the
                 world...";</code></pre>
-              
-              
+
+
             </div>
             <div class="docs-section">
               <div class="page-header">
@@ -597,9 +605,9 @@ tom.move();</code></pre>
               <h3 class="docs-heading">Curried Functions<span class="anchor-target" id="functions-curried-functions"></span>
                 <a href="#functions-curried-functions" name="functions-curried-functions" class="anchor glyphicon glyphicon-link"></a>
               </h3>
-              
+
               <p>Currying is a technique of transforming a function which takes multiple arguments in such a way that it can be called as a chain of functions.</p>
-              
+
               <pre><code class="lang-js">fn add(a, b, c) {
   return a + b + c;
 }
@@ -609,9 +617,9 @@ console.log(addOne(2, 3)); // => 6
 
 var addFive = addOne^(4);
 console.log(addFive(1));   // => 6</code></pre>
-            
+
             <p>Curried functions can also be seen as shorthand for <code>.bind()</code> (<code>x^("2")</code> will compile into <code>x.bind(x, "2")</code>), and work extremely well in functional-style programming.</p>
-            
+
             <pre><code class="lang-js">fn sortBy(key, array) {
   return array.sort((a, b) -> a[key] - b[key]);
 }
@@ -629,6 +637,72 @@ var peopleById = sortById(people);
 var peopleByAge = sortByAge(people);</code></pre>
 
             </div>
+            <div class="docs-section">
+              <div class="page-header">
+                <h1 class="docs-heading">Classes<span class="anchor-target" id="classes"></span>
+                  <a href="#classes" name="classes" class="anchor glyphicon glyphicon-link"></a>
+                </h1>
+              </div>
+              <h3 class="docs-heading">Declaration<span class="anchor-target" id="classes-declaration"></span>
+                <a href="#classes-declaration" name="classes-declaration" class="anchor glyphicon glyphicon-link"></a>
+              </h3>
+
+              <p>Spider, like modern Javascript, allows you to use classes to form a basic outline of objects via fields and methods.</p>
+
+              <pre><code class="lang-js">class Animal {
+  constructor(name) { this.name = name; }
+  move(distance) { alert("\(name) moved \(distance)m."); }
+}</code></pre>
+
+              <h3 class="docs-heading">Fields<span class="anchor-target" id="classes-fields"></span>
+                <a href="#classes-fields" name="classes-fields" class="anchor glyphicon glyphicon-link"></a>
+              </h3>
+
+              <p>Spider also enables more modern class functionality like inline defined class fields.</p>
+
+              <pre><code class="lang-js">class Animal {
+  name = "BasicAnimal";
+  constructor(name) { this.name = name if name else this.name; }
+  move(distance) { alert("\(name) moved \(distance)m."); }
+}</code></pre>
+
+              <h3 class="docs-heading">Static<span class="anchor-target" id="classes-static"></span>
+                <a href="#classes-static" name="conditional-expressions" class="anchor glyphicon glyphicon-link"></a>
+              </h3>
+
+              <p>Spider also allows inline static methods and fields.</p>
+
+              <pre><code class="lang-js">class Melon {
+  isMelon = true;
+
+  constructor(juicy) { this.isJuicy = juicy; }
+
+  eat(whois) { alert("\(whois) is eating a \('juicy ' if this.isJuicy else '')melon"); }
+
+  static isMelon(possibleMelon) { return typeof possibleMelon == "melon" and possibleMelon.isMelon; }
+}</code></pre>
+
+            <h3 class="docs-heading">Inheritance<span class="anchor-target" id="classes-inheritance"></span>
+                <a href="#classes-inheritance" name="classes-inheritance" class="anchor glyphicon glyphicon-link"></a>
+              </h3>
+
+              <p>Like functions in Spider, classes support inheritance, even from expressions.</p>
+
+              <pre><code class="lang-js">class Watermelon extends Melon {
+  constructor(juicy) { super(juicy); }
+
+  eat(whois) { alert("\(whois) is eating a \('juicer ' if this.isJuicy else '')watermelon"); }
+}</code></pre>
+
+            <h3 class="docs-heading">Expressions<span class="anchor-target" id="classes-expressions"></span>
+                <a href="#classes-expressions" name="classes-expressions" class="anchor glyphicon glyphicon-link"></a>
+              </h3>
+
+              <p>Classes even support being used as an expression.</p>
+
+              <pre><code class="lang-js">var storedMelonClass = class extends Melon {};</code></pre>
+            </div>
+
             <div class="docs-section">
               <div class="page-header">
                 <h1 class="docs-heading">Conditions<span class="anchor-target" id="conditions"></span>
@@ -736,7 +810,7 @@ for key of player {
               <pre><code class="lang-js">do {
   buy();
 } while supply > demand;</code></pre>
-              
+
               <h3 class="docs-heading">List Comprehensions<span class="anchor-target" id="list-comprehensions"></span>
                 <a href="#list-comprehensions" name="list-comprehensions" class="anchor glyphicon glyphicon-link"></a>
               </h3>
@@ -779,10 +853,14 @@ var doubles = [x * 2 for x in list];</code></pre>
                 <a href="#operators-null-coalescing-operator" name="operators-null-coalescing-operator" class="anchor glyphicon glyphicon-link"></a>
               </h3>
 
-              <p>The null-coalescing operator <code>??</code> returns the right expression if the left expression is null or undefined, and
-              the left expression otherwise.</p>
+              <p>The null-coalescing operator <code>??</code> returns the right expression if the left expression is null or undefined, and the left expression otherwise.</p>
 
               <pre><code class="lang-js">var name = options.name ?? "default name";</code></pre>
+
+              <p>Spider also introduces a null-coalesced assignment operator as <code>?=</code> which only assigns values if the value of the left expression is null or undefined.</p>
+
+              <pre><code class="lang-js">var isNull;
+isNull ?= "a string value";</code></pre>
 
               <h3 class="docs-heading">In Operator<span class="anchor-target" id="operators-in-operator"></span>
                 <a href="#operators-in-operator" name="operators-in-operator" class="anchor glyphicon glyphicon-link"></a>
@@ -833,19 +911,19 @@ console.log("address" in details) // => true</code></pre>
               <h3 class="docs-heading">Push and Get (<-)<span class="anchor-target" id="operators-push-and-get"></span>
                 <a href="#operators-push-and-get" name="operators-push-and-get" class="anchor glyphicon glyphicon-link"></a>
               </h3>
-              
+
               <p>Spider provides the <code><-</code> operator that can be used either with one argument or with two arguments. If used with two argument, e.g:</p>
-              
+
               <pre><code class="lang-js">apples <- apple;</code></pre>
-              
+
               <p>Then it behaves as a push operator, and compiles to <code>apples.push(apple);</code></p>
-              
+
               <p>If <code><-</code> is used with one argument, e.g:</p>
-              
+
               <pre><code class="lang-js">console.log(<-channel);</code></pre>
-              
+
               <p>Then it behaves as a get operator, and compiles to <code>await channel.get()</code>.</p>
-              
+
               <p>Note that the <code><-</code> operator is mostly used for <a href="#channels">Channels</a>.</p>
             </div>
             <div class="docs-section">
@@ -965,16 +1043,16 @@ var copy   = numbers[<span class="dot">..</span>];</code></pre>
               <h3 class="docs-heading">Pattern Matching<span class="anchor-target" id="switch-pattern-matching"></span>
                 <a href="#switch-pattern-matching" name="switch-pattern-matching" class="anchor glyphicon glyphicon-link"></a>
               </h3>
-              
+
               <p>Spider provides pattern matching with array expressions.</p>
-              
+
               <pre><code class="lang-js">fn fizzbuzz(i) {
   var result = [i % 3, i % 5];
   switch result {
     case [0, 0]: {
       return "FizzBuzz"
     }
-    
+
     case [0, ]: {
       return "Fizz"
     }
@@ -982,7 +1060,7 @@ var copy   = numbers[<span class="dot">..</span>];</code></pre>
     case [, 0]: {
       return "Buzz"
     }
-    
+
     default: {
       return "\(i)"
     }
@@ -999,7 +1077,7 @@ for number in [1...100] {
                   <a href="#modules" name="modules" class="anchor glyphicon glyphicon-link"></a>
                 </h1>
               </div>
-              
+
               <p>Spider's modules are based on ES6 modules. A module can export multiple things by prefixing their declarations with the keyword export. These exports are distinguished by their names and are called named exports.</p>
               <pre><code class="lang-js">// lib.js
 export fn square(x) {
@@ -1015,7 +1093,7 @@ console.log(square(11)); // 121
 console.log(diag(4, 3)); // 5</code></pre>
 
               <p>If you want to, you can also import the whole module and refer to its named exports via property notation:</p>
-              
+
               <pre><code class="lang-js">import * as lib from 'lib';
 console.log(lib.square(11)); // 121
 console.log(lib.diag(4, 3)); // 5</code></pre>
@@ -1023,9 +1101,9 @@ console.log(lib.diag(4, 3)); // 5</code></pre>
               <h3 class="docs-heading">Default Exports<span class="anchor-target" id="modules-default-exports"></span>
                 <a href="#modules-default-exports" name="modules-default-exports" class="anchor glyphicon glyphicon-link"></a>
               </h3>
-              
+
               <p>You can also export a default export. For example, an Spiderified jQuery might look like this:</p>
-              
+
               <pre><code class="lang-js">// jquery.js
 var jQuery = fn() {};
 
@@ -1034,11 +1112,11 @@ jQuery.prototype = {
 };
 
 export default jQuery;</code></pre>
-              
+
               <p>Then, an app that uses jQuery could import it with:</p>
-              
+
               <pre><code class="lang-js">import 'jquery' as $;</code></pre>
-              
+
               <p>The default export of the "jquery" module is now aliased to <code>$</code>.</p>
 
               <p>A default export makes the most sense as a module's "main" export, like the jQuery object in jQuery. You can use default and named exports in parallel.</p>
@@ -1048,14 +1126,14 @@ export default jQuery;</code></pre>
                 <h1 class="docs-heading">Destructuring<span class="anchor-target" id="destructuring"></span>
                   <a href="#destructuring" name="destructuring" class="anchor glyphicon glyphicon-link"></a>
                 </h1>
-              </div> 
-              
+              </div>
+
               <p>Destructuring is a powerful technique that makes it possible to extract data from arrays or objects using a syntax that mirrors the construction of array and object literals.</p>
 
               <h3 class="docs-heading">Array destructuring<span class="anchor-target" id="destructuring-array-destructuring"></span>
                 <a href="#destructuring-array-destructuring" name="destructuring-array-destructuring" class="anchor glyphicon glyphicon-link"></a>
               </h3>
-              
+
               <pre><code class="lang-js">var foo = ["one", "two", "three"];
 
 // without destructuring
@@ -1069,9 +1147,9 @@ var [one, two, three] = foo;</code></pre>
               <h3 class="docs-heading">Swapping Variables<span class="anchor-target" id="destructuring-swapping-variables"></span>
                 <a href="#destructuring-swapping-variables" name="destructuring-swapping-variables" class="anchor glyphicon glyphicon-link"></a>
               </h3>
-              
+
               <p>After executing this code, <code>b</code> is 1 and <code>a</code> is 3. Without destructuring, swapping two values requires a temporary variable (or, in some low-level languages, the XOR-swap trick).</p>
-              
+
               <pre><code class="lang-js">var a = 1;
 var b = 3;
 
@@ -1080,22 +1158,22 @@ var b = 3;
               <h3 class="docs-heading">Multiple-value returns<span class="anchor-target" id="destructuring-multi-value-returns"></span>
                 <a href="#destructuring-multi-value-returns" name="destructuring-multi-value-returns" class="anchor glyphicon glyphicon-link"></a>
               </h3>
-              
+
               <p>Thanks to destructuring assignment, functions can return multiple values. While it's always been possible to return an array from a function, this provides an added degree of convenience.</p>
-              
+
               <pre><code class="lang-js">fn f() {
   return [1, 2];
 }
 
 var [a, b] = f();
-console.log("A is \(a) and B is \(b)");</code></pre>   
+console.log("A is \(a) and B is \(b)");</code></pre>
 
               <h3 class="docs-heading">Ignoring some returned values<span class="anchor-target" id="destructuring-ignoring-some-returned-values"></span>
                 <a href="#destructuring-ignoring-some-returned-values" name="destructuring-ignoring-some-returned-values" class="anchor glyphicon glyphicon-link"></a>
               </h3>
-              
+
               <p>You can also ignore return values that you're not interested in:</p>
-              
+
               <pre><code class="lang-js">fn f() {
   return [1, 2, 3];
 }
@@ -1104,7 +1182,7 @@ var [a, , b] = f();
 console.log("A is \(a) and B is \(b)");</code></pre>
 
               <p>After running this code, a is 1 and b is 3. The value 2 is ignored.</p>
-              
+
               <h3 class="docs-heading">Object destructuring<span class="anchor-target" id="destructuring-object-destructuring"></span>
                 <a href="#destructuring-object-destructuring" name="destructuring-object-destructuring" class="anchor glyphicon glyphicon-link"></a>
               </h3>
@@ -1113,27 +1191,27 @@ console.log("A is \(a) and B is \(b)");</code></pre>
 var {p, q} = o;
 
 console.log(p); // 42
-console.log(q); // true 
+console.log(q); // true
 
 // Assign new variable names
 var {p: foo, q: bar} = o;
 
 console.log(foo); // 42
-console.log(bar); // true</code></pre>          
+console.log(bar); // true</code></pre>
             </div>
             <div class="docs-section">
               <div class="page-header">
                 <h1 class="docs-heading">Shorthand Notations<span class="anchor-target" id="shorthand-notations"></span>
                   <a href="#shorthand-notations" name="shorthand-notations" class="anchor glyphicon glyphicon-link"></a>
                 </h1>
-              </div> 
-              
+              </div>
+
               <h3 class="docs-heading">Shorthand Property Names<span class="anchor-target" id="shorthand-property-names"></span>
                 <a href="#shorthand-property-names" name="shorthand-property-names" class="anchor glyphicon glyphicon-link"></a>
               </h3>
-              
+
               <p>This shorthand allows you to skip repeating yourself when the property name and property value are the same in an object literal.</p>
-              
+
               <pre><code class="lang-js">fn getPoint() {
   var x = ...;
   var y = ...;
@@ -1144,9 +1222,9 @@ console.log(bar); // true</code></pre>
               <h3 class="docs-heading">Shorthand Method Names<span class="anchor-target" id="shorthand-method-names"></span>
                 <a href="#shorthand-method-names" name="shorthand-method-names" class="anchor glyphicon glyphicon-link"></a>
               </h3>
-              
+
               <p>This shorthand allows you to define methods on objects. The methods are non enumerable so that they behave like the methods on the built in objects.</p>
-              
+
               <pre><code class="lang-js">var object = {
   value: 42,
   toString() {
@@ -1160,11 +1238,11 @@ console.log(bar); // true</code></pre>
                   <a href="#async" name="async" class="anchor glyphicon glyphicon-link"></a>
                 </h1>
               </div>
-              
+
               <p>Spider provides C#-like async functions.</p>
 
               <p>With async functions, you can await on a promise using the <code>await</code> operator. This halts the function (without blocking the event loop), waits for the promise to resolve, and returns the value. If the promise is rejected, the <code>await</code> throws with the rejection value, so you can deal with it using <code>catch</code>.</p>
-              
+
               <pre><code class="lang-js">async fn loadStory() {
   try {
     var story = await getJSON('story.json');
@@ -1186,10 +1264,10 @@ console.log(bar); // true</code></pre>
               <h3 class="docs-heading">Node.js-style callbacks<span class="anchor-target" id="async-nodejs-callbacks"></span>
                 <a href="#async-nodejs-callbacks" name="async-nodejs-callbacks" class="anchor glyphicon glyphicon-link"></a>
               </h3>
-              
+
               <p>Spider's <code>await</code> works with promises by default. If you want to use it with Node.js-style callbacks, you can use the <a href="https://github.com/petkaantonov/bluebird">bluebird</a> library.</p>
               <p>This technique completely solves <a href="http://callbackhell.com/">callback hell</a>.</p>
-              
+
               <pre><code class="lang-js">var fs = Promise.promisifyAll(require("fs"));
 
 async fn readFiles() {
@@ -1199,14 +1277,14 @@ async fn readFiles() {
   var file4 = await fs.readFileAsync("file4.json");
   console.log(file1, file2, file3, file4);
 }</code></pre>
-              
+
               <p>Parallel version:</p>
-              
+
               <pre><code class="lang-js">var fs = Promise.promisifyAll(require("fs"));
 
 async fn readFiles() {
   var [file1, file2, file3, file4] = await Promise.all([
-    fs.readFileAsync("file1.json"), 
+    fs.readFileAsync("file1.json"),
     fs.readFileAsync("file2.json"),
     fs.readFileAsync("file3.json"),
     fs.readFileAsync("file4.json")
@@ -1221,14 +1299,14 @@ async fn readFiles() {
                   <a href="#channels" name="channels" class="anchor glyphicon glyphicon-link"></a>
                 </h1>
               </div>
-              
+
               <p>Spider provides Go-like channels. Channels are an easy way to communicate between sequential processes. Channels can be used everywhere: <strong>UI abstraction</strong>, <strong>Node.js services</strong> (e.g: Mailing List), and more.</p>
               <pre><code class="lang-js">var channel = new Channel();
-  
+
 fn sendMail(title, body) {
   var message = { title, body };
   channel <- message;
-  
+
   console.log("Message added to queue.");
 }
 
@@ -1237,32 +1315,32 @@ go {
     smtp.send(<-channel);
   }
 };</code></pre>
-              
+
               <h3 class="docs-heading">Installation<span class="anchor-target" id="channels-installation"></span>
                 <a href="#channels-installation" name="channels-installation" class="anchor glyphicon glyphicon-link"></a>
               </h3>
-              
+
               <p>To use channels, you must install the <a href="https://github.com/alongubkin/spider-channels">spider-channels</a> runtime library.</p>
 
               <p><strong>Browser</strong></p>
-              
+
               <p>Install the library via Bower:</p>
-              
+
               <pre><code class="lang-js">bower install --save spider-channels</code></pre>
-              
+
               <p><strong>Node.js</strong></p>
-              
+
               <p>Install the library via npm:</p>
-               
+
               <pre><code class="lang-js">npm install --save spider-channels</code></pre>
-              
+
               <p>You can then import <code>Channel</code> with:</p>
-              
+
               <pre><code class="lang-js">var { Channel } = require("spider-channels");
 var chan = new Channel();
 ...
 </code></pre>
-  
+
 
             </div>
           </div>
