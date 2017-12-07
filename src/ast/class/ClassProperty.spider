@@ -1,0 +1,33 @@
+use :node;
+
+var Node = module.require('../Node').Node;
+
+fn ClassProperty(id, init, isStatic)
+  extends Node {
+
+  this.type = "ClassProperty";
+
+  this.key = id;
+  this.key.parent = this;
+
+  this.value = init;
+  this.value.parent = this;
+
+  this["static"] = !(!isStatic);
+}
+
+ClassProperty.prototype.codegen = () -> {
+  if !super.codegen() {
+    return;
+  }
+
+  if this.value? {
+    this.value = this.value.codegen();
+  }
+
+  this.key = this.key.codegen();
+
+  return this;
+};
+
+exports.ClassProperty = ClassProperty;

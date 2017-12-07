@@ -1,6 +1,7 @@
 use :node;
 
-var Node = module.require('./Node').Node;
+var Node = module.require('./Node').Node,
+    CallExpression = module.require('./expressions/CallExpression').CallExpression;
 
 fn Parameter(id, defaultValue, splat)
   extends Node {
@@ -129,7 +130,7 @@ Parameter.generateFunctionExtend = (func, nextVar = "functionExpression0") -> {
   });
 
   return id;
-}
+};
 
 Parameter.generateFunctionBody = (func, params, body, defaults) -> {
   var splatPosition = -1;

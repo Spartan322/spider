@@ -1,0 +1,38 @@
+use :node;
+
+var Node = module.require('../Node').Node;
+
+fn Class(id, extend, body, isExpression)
+  extends Node {
+
+  this.type = "ClassExpression" if isExpression else "ClassDeclaration";
+
+  this.id = id;
+  this.id.parent = this;
+
+  this.superClass = extend;
+  if this.superClass? {
+    this.superClass.parent = this;
+  }
+
+  this.body = body;
+  this.body.parent = this;
+}
+
+Class.prototype.codegen = () -> {
+  if !super.codegen() {
+    return;
+  }
+
+  this.id = this.id.codegen();
+
+  if this.superClass? {
+    this.superClass = this.superClass.codegen();
+  }
+
+  this.body = this.body.codegen();
+
+  return this;
+};
+
+exports.Class = Class;

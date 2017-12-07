@@ -1,19 +1,26 @@
 use :node;
 
-var Node = module.require('../Node').Node;
+var Node = module.require('../Node').Node,
+	babel = module.require('babel-core');
 
 fn JavascriptLiteralExpression(raw)
   extends Node {
-  
+
   this.type = "JavascriptExpression";
-  this["JavascriptLiteralExpression"] = raw;
+  this.raw = raw;
 }
 
 JavascriptLiteralExpression.prototype.codegen = () -> {
   if !super.codegen() {
     return;
   }
-  
+
+  this.type = "EmptyStatement";
+
+  var n = this.getContext().node;
+  if(!n.body) n.body = [];
+  n.body.concat(babel.transform(this.raw, { code: false }).ast.program.body);
+
   return this;
 };
 

@@ -2,12 +2,12 @@ use :node;
 
 var Node = module.require('./Node').Node;
 
-fn Program(body) 
+fn Program(body)
   extends Node {
-  
+
   this.type = 'Program';
   this.body = body;
-  
+
   for statement, i in body {
     if statement? {
       statement.parent = this;
@@ -15,7 +15,7 @@ fn Program(body)
       body[i] = { type: 'EmptyStatement' };
     }
   }
-  
+
   this.definedIdentifiers = Program.prototype.generateIdentifiers(
     'Infinity',
     'NaN',
@@ -43,7 +43,7 @@ fn Program(body)
     'StopIteration',
     'SyntaxError',
     'TypeError',
-    'URIError', 
+    'URIError',
     'Number',
     'Math',
     'Date',
@@ -69,7 +69,7 @@ fn Program(body)
     'Iterator',
     'Generator',
     'Promise',
-    'arguments');    
+    'arguments');
 }
 
 Program.prototype.codegen = () -> {
@@ -80,12 +80,12 @@ Program.prototype.codegen = () -> {
   var i = 0;
   while (i < this.body.length) {
     var statement = this.body[i];
-    
+
     if !statement || statement.codeGenerated {
       i++;
       continue;
     }
-    
+
     if statement.codegen && statement.codegen() {
       this.body[this.body.indexOf(statement)] = statement;
       i++;

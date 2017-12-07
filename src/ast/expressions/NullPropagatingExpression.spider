@@ -32,7 +32,7 @@ NullPropagatingExpression.prototype.codegen = () -> {
   if this.object.hasCallExpression?() {
     var id = {
       "type": "Identifier",
-      "name": NullPropagatingExpression.getNextObjectName(),
+      "name": this.getNextVariableName("nullPropagating"),
       "__member_expression": {
         "type": "MemberExpression",
         "object": this.object,
@@ -42,7 +42,7 @@ NullPropagatingExpression.prototype.codegen = () -> {
     };
 
     context.node.body.splice(context.position +
-      (NullPropagatingExpression.nullPropagatingIndex - 1), 0, {
+      (this.getVariableName("nullPropagating") - 1), 0, {
       "type": "VariableDeclaration",
       "declarations": [
         {
@@ -161,26 +161,5 @@ NullPropagatingExpression.prototype.codegen = () -> {
 };
 
 NullPropagatingExpression.prototype.hasCallExpression = () -> true;
-
-NullPropagatingExpression.getNextObjectName = () -> {
-  if !this.nullPropagatingIndex? {
-    this.nullPropagatingIndex = 0;
-    this.definedObjectNames = [];
-  }
-
-  var name = "nullPropagating" + this.nullPropagatingIndex++;
-  this.definedObjectNames.push(name);
-
-  return name;
-};
-
-NullPropagatingExpression.isObjectNameDefined = (name) -> {
-  return this.definedObjectNames.indexOf(name) != -1;
-};
-
-NullPropagatingExpression.resetVariableNames = () -> {
-  this.nullPropagatingIndex = 0;
-  this.definedObjectNames = [];
-};
 
 exports.NullPropagatingExpression = NullPropagatingExpression;

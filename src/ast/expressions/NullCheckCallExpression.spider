@@ -51,7 +51,7 @@ NullCheckCallExpression.prototype.codegen = () -> {
     };
 
     context.node.body.splice(context.position +
-      (NullCheckCallExpression.nullCheckIndex - 2), 0, {
+      (this.getVariableName("nullCheck") - 2), 0, {
       "type": "VariableDeclaration",
       "declarations": [
         {

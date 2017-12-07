@@ -1798,3 +1798,118 @@ describe('undefined literals:', function () {
   it('undefined literal',
     generateTest('undefined;', 'void 0;'));
 });
+
+describe('class declarations', function() {
+  it('empty class',
+    generateTest('class a {}', 'class a {}'));
+
+  it('empty class with EOS semicolon',
+    generateTest('class a {};', 'class a {}'));
+
+  it('empty class with identifier inheritance',
+    generateTest('class a extends b {}', 'class a extends b {}'));
+
+  it('empty class with number inheritance',
+    generateTest('class a extends 0 {}', 'class a extends 0 {}'));
+
+  it('empty class with string inheritance',
+    generateTest('class a extends "string" {}', 'class a extends "string" {}'));
+
+  it('empty class with null inheritance',
+    generateTest('class a extends null {}', 'class a extends null {}'));
+
+  it('empty class with undefined inheritance',
+    generateTest('class a extends undefined {}', 'class a extends void 0 {}'));
+
+  it('empty class with function call inheritance',
+    generateTest('class a extends b() {}', 'class a extends b() {}'));
+
+  it('class with 1 property',
+    generateTest('class a { b = 1; }', 'class a {\n  b = 1;\n}'));
+
+  it('class with 2 properties',
+    generateTest('class a { b = 1; c = 2; }', 'class a {\n  b = 1;\n  c = 2;\n}'));
+
+  it('class with 3 properties',
+    generateTest('class a { b = 1; c = 2; d = 3; }', 'class a {\n  b = 1;\n  c = 2;\n  d = 3;\n}'));
+
+  it('class with 1 property and identifier inheritance',
+    generateTest('class a extends b { c = 1; }', 'class a extends b {\n  c = 1;\n}'));
+
+  it('class with 1 static property',
+    generateTest('class a { static b = 1; }', 'class a {\n  static b = 1;\n}'));
+
+  it('class with 1 method',
+    generateTest('class a { b() {} }', 'class a {\n  b() {}\n\n}'));
+
+  it('class with 2 methods',
+    generateTest('class a { b() {} c() {} }', 'class a {\n  b() {}\n\n  c() {}\n\n}'));
+
+  it('class with 3 methods',
+    generateTest('class a { b() {} c() {} d() {} }', 'class a {\n  b() {}\n\n  c() {}\n\n  d() {}\n\n}'));
+
+  it('class with 1 static method',
+    generateTest('class a { static b() {} }', 'class a {\n  static b() {}\n\n}'));
+
+  it('class with 1 property and 1 method',
+    generateTest('class a { b = 1; c() {}}', 'class a {\n  b = 1;\n\n  c() {}\n\n}'));
+
+  it('class with 2 properties, 2 methods, 1 static method, 1 static property, and identifier inheritance',
+    generateTest('class a extends b { static c = 1; static d() {} e = 0; f = 1; g() {} h() {} }', 'class a extends b {\n  static c = 1;\n\n  static d() {}\n\n  e = 0;\n  f = 1;\n\n  g() {}\n\n  h() {}\n\n}'));
+});
+
+describe('class expressions', function() {
+  it('empty class',
+    generateTest('var b = class a {};', 'let b = class a {};'));
+
+  it('empty class with identifier inheritance',
+    generateTest('var c = class a extends b {};', 'let c = class a extends b {};'));
+
+  it('empty class with number inheritance',
+    generateTest('var b = class a extends 0 {};', 'let b = class a extends 0 {};'));
+
+  it('empty class with string inheritance',
+    generateTest('var b = class a extends "string" {};', 'let b = class a extends "string" {};'));
+
+  it('empty class with null inheritance',
+    generateTest('var b = class a extends null {};', 'let b = class a extends null {};'));
+
+  it('empty class with undefined inheritance',
+    generateTest('var b = class a extends undefined {};', 'let b = class a extends void 0 {};'));
+
+  it('empty class with function call inheritance',
+    generateTest('var c = class a extends b() {};', 'let c = class a extends b() {};'));
+
+  it('class with 1 property',
+    generateTest('var c = class a { b = 1; };', 'let c = class a {\n  b = 1;\n};'));
+
+  it('class with 2 properties',
+    generateTest('var d = class a { b = 1; c = 2; };', 'let d = class a {\n  b = 1;\n  c = 2;\n};'));
+
+  it('class with 3 properties',
+    generateTest('var e = class a { b = 1; c = 2; d = 3; };', 'let e = class a {\n  b = 1;\n  c = 2;\n  d = 3;\n};'));
+
+  it('class with 1 property and identifier inheritance',
+    generateTest('var d = class a extends b { c = 1; };', 'let d = class a extends b {\n  c = 1;\n};'));
+
+  it('class with 1 static property',
+    generateTest('var c = class a { static b = 1; };', 'let c = class a {\n  static b = 1;\n};'));
+
+  it('class with 1 method',
+    generateTest('var c = class a { b() {} };', 'let c = class a {\n  b() {}\n\n};'));
+
+  it('class with 2 methods',
+    generateTest('var d = class a { b() {} c() {} };', 'let d = class a {\n  b() {}\n\n  c() {}\n\n};'));
+
+  it('class with 3 methods',
+    generateTest('var e = class a { b() {} c() {} d() {} };', 'let e = class a {\n  b() {}\n\n  c() {}\n\n  d() {}\n\n};'));
+
+  it('class with 1 static method',
+    generateTest('var c = class a { static b() {} };', 'let c = class a {\n  static b() {}\n\n};'));
+
+  it('class with 1 property and 1 method',
+    generateTest('var d = class a { b = 1; c() {}};', 'let d = class a {\n  b = 1;\n\n  c() {}\n\n};'));
+
+  it('class with 2 properties, 2 methods, 1 static method, 1 static property, and identifier inheritance',
+    generateTest('var i = class a extends b { static c = 1; static d() {} e = 0; f = 1; g() {} h() {} };', 'let i = class a extends b {\n  static c = 1;\n\n  static d() {}\n\n  e = 0;\n  f = 1;\n\n  g() {}\n\n  h() {}\n\n};'));
+});

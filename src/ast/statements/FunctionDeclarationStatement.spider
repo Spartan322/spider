@@ -43,7 +43,7 @@ FunctionDeclarationStatement.prototype.codegen = () -> {
   this.body = this.body.codegen();
 
   if this.inheritsFrom? {
-    Parameter.geneateFunctionExtend(this);
+    Parameter.generateFunctionExtend(this);
   }
 
   return this;

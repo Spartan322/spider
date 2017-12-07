@@ -374,6 +374,9 @@ Keyword
   / GoToken
   / NullToken
   / UndefinedToken
+  / ClassToken
+  / ExtendsToken
+  / StaticToken
 
 // Literal Definitions
 
@@ -670,6 +673,9 @@ AsyncToken        = "async"       !IdentifierPart
 AwaitToken        = "await"       !IdentifierPart
 GoToken           = "go"          !IdentifierPart
 UndefinedToken    = "undefined"   !IdentifierPart
+ClassToken        = "class"       !IdentifierPart
+ExtendsToken      = "extends"     !IdentifierPart
+StaticToken       = "static"      !IdentifierPart
 
 // Helper Defintions
 __
@@ -695,7 +701,7 @@ Block
     }
 
 InheritsFrom
-  = "extends" __ call:CallExpression __ {
+  = ExtendsToken __ call:CallExpression __ {
       return call;
     }
 
@@ -726,6 +732,7 @@ Statement
   = Block
   / VariableStatement
   / FunctionDeclaration
+  / ClassDeclaration
   / IfStatement
   / PushStatement
   / ExpressionStatement
@@ -745,7 +752,6 @@ Statement
   / ExportDeclarationStatement
   / DoWhileStatement
   / GoStatement
-
 
 VariableStatement
   = VarToken __ declarations:VariableDeclarationList EOS {
@@ -1045,6 +1051,49 @@ UseIdentifier
   = Identifier
   / ":" id:Identifier {
     return id.asPredefinedCollection();
+  }
+
+ClassDeclaration
+  = ClassToken __ id:Identifier __ extendExpr:(ExtendsToken __ CallExpression __)? body:ClassBody EOS? {
+    return insertLocationData(new ast.Class(id, extractOptional(extendExpr, 2), body, false), text(), location());
+  }
+
+ClassExpression
+  = ClassToken __ id:Identifier __ extendExpr:(ExtendsToken __ CallExpression __)? body:ClassBody {
+    return insertLocationData(new ast.Class(id, extractOptional(extendExpr, 2), body, true), text(), location());
+  }
+
+ClassBody
+  = "{" __ body:(ClassContentList __)? "}" {
+    return insertLocationData(new ast.ClassBody(optionalList(extractOptional(body, 0))), text(), location());
+  }
+
+ClassContentList
+  = first:ClassContent rest:(__ ClassContent)* {
+    return buildList(first, rest, 1);
+  }
+
+ClassContent
+  = ClassProperty
+  / ClassMethod
+
+ClassProperty
+  = staticToken:(StaticToken __)? id:Identifier init:(__ Initialiser)? EOS {
+    return insertLocationData(new ast.ClassProperty(
+      id,
+      extractOptional(init, 1),
+      extractOptional(staticToken, 0)
+    ), text(), location());
+  }
+
+ClassMethod
+  = staticToken:(StaticToken __)? id:Identifier __ "(" __ params:(FormalParameterList __)? ")" __ body:Block {
+    return insertLocationData(new ast.ClassMethod(
+      id,
+      optionalList(extractOptional(params, 0)),
+      body,
+      extractOptional(staticToken, 0)
+    ), text(), location());
   }
 
 // Expression Definitions
@@ -1385,6 +1434,7 @@ PrimaryExpression
   / Literal
   / ArrayLiteral
   / ObjectLiteral
+  / ClassExpression
   / "(" __ expression:Expression __ ")" { return expression; }
 
 ThisExpression
@@ -1413,9 +1463,9 @@ OptionalRange
   }
 
 /*JavascriptLiteralExpression
-  = "@js" __ "{" __? jsLiteral:(SourceCharacter __)* "}" {
-    return insertLocationData(new ast.JavascriptLiteralExpression(jsLiteral), text(), location());
-  } */
+  = "@js" __ "{" __? raw:(SourceCharacter __)* "}" {
+    return insertLocationData(new ast.JavascriptLiteralExpression(raw), text(), location());
+  }*/
 
 Expression
   = expression:AssignmentExpression {

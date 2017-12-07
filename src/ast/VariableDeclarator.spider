@@ -2,16 +2,16 @@ use :node;
 
 var Node = module.require('./Node').Node;
 
-fn VariableDeclarator(id, init) 
+fn VariableDeclarator(id, init)
   extends Node {
-  
+
   this.type = 'VariableDeclarator';
-  
+
   this.id = id;
   this.id.parent = this;
-  
+
   this.init = init;
-  
+
   if this.init? {
     this.init.parent = this;
   }
@@ -21,11 +21,11 @@ VariableDeclarator.prototype.codegen = () -> {
   if !super.codegen() {
     return;
   }
-  
+
   if this.init? {
     this.init = this.init.codegen();
   }
-  
+
   this.id = this.id.codegen();
   return this;
 };

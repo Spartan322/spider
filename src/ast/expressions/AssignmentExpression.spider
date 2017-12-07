@@ -24,13 +24,15 @@ AssignmentExpression.prototype.codegen = () -> {
   }
 
   if this.operator == '?=' {
-    this.right = new NullCoalescingExpression(this.left.clone(), this.right);
+    this.right = new NullCoalescingExpression(this.left, this.right, false);
     this.right.parent = this;
     this.operator = '=';
   }
 
-  this.left = this.left.codegen();
-  this.right = this.right.codegen(false) if this.right.type == 'NullCoalescingExpression' else this.right.codegen();
+  if this.right.type != 'NullCoalescingExpression' {
+   this.left = this.left.codegen();
+   this.right = this.right.codegen();
+  } else this.right = this.right.codegen(false);
 
   return this;
 };

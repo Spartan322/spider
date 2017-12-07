@@ -1,19 +1,19 @@
 use :node;
 
 var Node = module.require('../Node').Node;
-    
-fn CallExpression(callee, args) 
+
+fn CallExpression(callee, args)
   extends Node {
-  
+
   this.type = 'CallExpression';
   this.callee = callee;
   this.callee.parent = this;
-  
-  ::Object.defineProperty(this, 'arguments', { 
-    value: args, 
-    enumerable: true 
+
+  ::Object.defineProperty(this, 'arguments', {
+    value: args,
+    enumerable: true
   });
-  
+
   for arg in args {
     arg.parent = this;
   }
@@ -23,37 +23,37 @@ CallExpression.prototype.codegen = () -> {
   if !super.codegen() {
     return;
   }
-  
-  var calleeType = this.callee.type;  
-  
+
+  var calleeType = this.callee.type;
+
   if !this.callee.codeGenerated {
     this.callee = this.callee.codegen();
   }
-  
+
   var args = this.arguments;
   var splatPositions = [];
-  
+
   for arg, i in args {
-    if args[i].type == "SplatExpression" || args[i].__splat { 
+    if args[i].type == "SplatExpression" || args[i].__splat {
       splatPositions.push(i);
     }
-    
-    if !args[i].codeGenerated { 
+
+    if !args[i].codeGenerated {
       args[i] = arg.codegen();
     }
   }
-  
+
   if splatPositions.length > 0 {
     var argsClone = args.slice(0);
     args.length = 0;
-    args.push({ 
+    args.push({
       "type": "NullLiteral"
     });
-    
+
     if argsClone.length == 1 {
       args.push(argsClone[0].arguments[0]);
     } else {
-      args.push({ 
+      args.push({
         "type": "CallExpression",
         "callee": {
           "type": "MemberExpression",
@@ -72,7 +72,7 @@ CallExpression.prototype.codegen = () -> {
             if splatPositions.indexOf(i + (1 if splatPositions[0] == 0 else splatPositions[0])) != -1 {
               return arg;
             }
-            
+
             return {
               "type": "ArrayExpression",
               "elements": [arg]
@@ -81,19 +81,19 @@ CallExpression.prototype.codegen = () -> {
       });
     }
   }
-  
-  // If we are null propagating (?.), then turn this 
+
+  // If we are null propagating (?.), then turn this
   // into a condition and add the null propagating condition.
-  if this.callee.type == 'ConditionalExpression' && 
+  if this.callee.type == 'ConditionalExpression' &&
      (calleeType == 'NullPropagatingExpression' || calleeType == 'MemberExpression') {
     var parent = this.parent;
-    
+
     var consequent = {
       type: 'CallExpression',
       callee: this.callee.consequent,
       arguments: this.arguments
     };
-    
+
     if splatPositions.length > 0 {
       this.callee.consequent = {
         "type": "MemberExpression",
@@ -105,7 +105,7 @@ CallExpression.prototype.codegen = () -> {
         }
       };
     }
-                
+
     // If we're inside a statement, then turn this into
     // a normal if statement.
     if parent.type == 'ExpressionStatement' {
@@ -139,7 +139,7 @@ CallExpression.prototype.codegen = () -> {
       }
     };
   }
-  
+
   return this;
 };
 

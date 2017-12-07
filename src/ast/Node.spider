@@ -83,22 +83,21 @@ fn Node() {
     return block;
   };
 
-  this.getGlobalBlockScope = () => {
-    if not this.parent? { return this; }
-    return this.parent.getGlobalBlockScope();
-  }
-
-  this.clone = () => {
-    use Object;
-    var newObj = Object.create(Object.getPrototypeOf(this));
-    for prop, val of this {
-      use newObj;
-      newObj[prop] = val;
+  self.getNextVariableName = (baseIdent, testIdent = true) => {
+    if not Node[baseIdent+"Index"]? { Node[baseIdent+"Index"] = 0; }
+    var num = Node[baseIdent+"Index"];
+    var result = baseIdent + num++;
+    if testIdent {
+      while self.isIdentifierDefined(result)
+      {
+        result = baseIdent + num++;
+      }
     }
-    newObj.codegen = this.codegen;
-    newObj.hasCallExpression = this.hasCallExpression;
-    return newObj;
-  }
+    Node[baseIdent+"Index"] = num;
+    return result;
+  };
+
+  self.getVariableName = (baseIdent) => Node[baseIdent+"Index"];
 }
 
 Node.prototype.codegen = () -> {
@@ -108,19 +107,6 @@ Node.prototype.codegen = () -> {
 
   this.codeGenerated = true;
   return true;
-};
-
-Node.prototype.getNextVariableName = (baseIdent) -> {
-  var construct = Object.getPrototypeOf(this).constructor;
-  if not construct[baseIdent+'Index']? {
-    construct[baseIdent+'Index'] = 0;
-  }
-
-  construct.resetVariableName = () -> construct[baseIdent+'Index'] = 0;
-
-  var result = baseIdent + construct[baseIdent+'Index'];
-  while this.isIdentifierDefined(result = baseIdent + construct[baseIdent+'Index']++) {}
-  return result;
 };
 
 Node.setErrorManager = (errorManager) -> {
